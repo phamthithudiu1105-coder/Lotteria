@@ -92,7 +92,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Số lượng</label>
-                            <input type="number" min="1" max="999999" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
+                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
                         </div>
                         <div class="col-md-1 d-grid">
                             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -117,7 +117,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label fw-semibold">Số lượng</label>
-            <input data-name="SoLuongDat" type="number" min="1" max="999999" value="1" class="form-control" required>
+            <input data-name="SoLuongDat" type="number" min="1" max="500" value="1" class="form-control" required>
         </div>
         <div class="col-md-1 d-grid">
             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -142,6 +142,76 @@
         const saveBtn = document.getElementById('save-btn');
         const form = document.querySelector('form');
         let initialState = getCurrentState();
+
+        function validateQuantity(input) {
+            const value = parseInt(input.value);
+            let errorMsg = '';
+            
+            if (isNaN(value) || value <= 0) {
+                errorMsg = 'Số lượng phải lớn hơn 0';
+            } else if (value > 500) {
+                errorMsg = 'Số lượng không được vượt quá 500';
+            }
+
+            if (errorMsg) {
+                input.setCustomValidity(errorMsg);
+                input.classList.add('is-invalid');
+            } else {
+                input.setCustomValidity('');
+                input.classList.remove('is-invalid');
+            }
+        }
+
+        function getSelectedIngredients() {
+            const selected = [];
+            document.querySelectorAll('.item-row select[name*="MaNguyenLieu"]').forEach(select => {
+                if (select.value) {
+                    selected.push(select.value);
+                }
+            });
+            return selected;
+        }
+
+        function updateSelectOptions() {
+            const selectedIngredients = getSelectedIngredients();
+            document.querySelectorAll('.item-row select[name*="MaNguyenLieu"]').forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '';
+                
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Chọn nguyên liệu';
+                select.appendChild(placeholder);
+
+                ingredientOptions.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.value;
+                    optionElement.textContent = option.label;
+                    
+                    if (option.value === currentValue) {
+                        optionElement.selected = true;
+                        select.appendChild(optionElement);
+                    } else if (!selectedIngredients.includes(option.value)) {
+                        select.appendChild(optionElement);
+                    }
+                });
+            });
+            checkForChanges();
+        }
+
+        // Thêm sự kiện cho tất cả input số lượng hiện có
+        document.querySelectorAll('input[name*="SoLuongDat"]').forEach(input => {
+            input.addEventListener('input', function() {
+                validateQuantity(this);
+                checkForChanges();
+            });
+            validateQuantity(input);
+        });
+
+        // Thêm sự kiện change cho tất cả select hiện có
+        document.querySelectorAll('select[name*="MaNguyenLieu"]').forEach(select => {
+            select.addEventListener('change', updateSelectOptions);
+        });
 
         function getCurrentState() {
             const state = {
@@ -187,53 +257,40 @@
             saveBtn.disabled = !changed;
         }
 
-        function renderIngredientOptions(select, selectedValue) {
-            select.innerHTML = '';
-
-            const placeholder = document.createElement('option');
-            placeholder.value = '';
-            placeholder.textContent = 'Chọn nguyên liệu';
-            select.appendChild(placeholder);
-
-            ingredientOptions.forEach((option) => {
-                const element = document.createElement('option');
-                element.value = option.value;
-                element.textContent = option.label;
-
-                if (selectedValue && selectedValue === option.value) {
-                    element.selected = true;
-                }
-
-                select.appendChild(element);
-            });
-        }
-
         function addItemRow() {
             const template = document.getElementById('item-template').content.cloneNode(true);
             template.querySelectorAll('[data-name]').forEach((input) => {
                 input.name = 'items[' + itemIndex + '][' + input.dataset.name + ']';
-
-                if (input.tagName === 'SELECT') {
-                    renderIngredientOptions(input, '');
-                }
-
                 input.removeAttribute('data-name');
             });
+            const quantityInput = template.querySelector('input[type="number"]');
+            if (quantityInput) {
+                quantityInput.addEventListener('input', function() {
+                    validateQuantity(this);
+                    checkForChanges();
+                });
+            }
+            const selectInput = template.querySelector('select[name*="MaNguyenLieu"]');
+            if (selectInput) {
+                selectInput.addEventListener('change', updateSelectOptions);
+            }
             itemsContainer.appendChild(template);
             itemIndex++;
             itemsContainer.dataset.nextIndex = String(itemIndex);
-            checkForChanges();
+            updateSelectOptions();
         }
 
         function removeItemRow(button) {
             const rows = document.querySelectorAll('.item-row');
             if (rows.length === 1) {
                 rows[0].querySelector('select').value = '';
-                rows[0].querySelector('input[type="number"]').value = 1;
+                const quantityInput = rows[0].querySelector('input[type="number"]');
+                quantityInput.value = 1;
+                validateQuantity(quantityInput);
             } else {
                 button.closest('.item-row').remove();
             }
-            checkForChanges();
+            updateSelectOptions();
         }
 
         // Listen for changes
@@ -248,5 +305,8 @@
                 alert('Bạn chưa thay đổi gì cả!');
             }
         });
+
+        // Khởi tạo select options ban đầu
+        document.addEventListener('DOMContentLoaded', updateSelectOptions);
     </script>
 @endsection

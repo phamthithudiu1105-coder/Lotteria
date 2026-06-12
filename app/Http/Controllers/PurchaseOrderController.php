@@ -82,7 +82,7 @@ class PurchaseOrderController extends Controller
                 DB::raw('COUNT(c.MaNguyenLieu) as SoMatHang'),
                 DB::raw('COALESCE(SUM(c.SoLuongDat), 0) as TongSoLuong')
             )
-            ->when($status, fn ($query) => $query->whereIn('d.TrangThai', $this->statusCandidates([$status])))
+            ->when($status, fn($query) => $query->whereIn('d.TrangThai', $this->statusCandidates([$status])))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
                     $inner->where('d.MaDonDatHang', 'like', "%{$search}%")
@@ -92,8 +92,8 @@ class PurchaseOrderController extends Controller
             })
             ->groupBy('d.MaDonDatHang', 'd.NgayDat', 'd.TrangThai', 'd.GhiChu', 't.HoTen')
             ->orderBy(self::SORT_FIELDS[$sort], $direction)
-            ->when($sort !== 'code', fn ($query) => $query->orderByDesc('d.MaDonDatHang'))
-            ->when($sort !== 'date', fn ($query) => $query->orderByDesc('d.NgayDat'))
+            ->when($sort !== 'code', fn($query) => $query->orderByDesc('d.MaDonDatHang'))
+            ->when($sort !== 'date', fn($query) => $query->orderByDesc('d.NgayDat'))
             ->orderByDesc('d.MaDonDatHang')
             ->paginate(10)
             ->withQueryString();
@@ -122,7 +122,7 @@ class PurchaseOrderController extends Controller
         }
 
         $summaryCards = collect(self::SUMMARY_STATUSES)
-            ->mapWithKeys(fn (string $orderStatus) => [$orderStatus => (int) ($summary[$orderStatus] ?? 0)]);
+            ->mapWithKeys(fn(string $orderStatus) => [$orderStatus => (int) ($summary[$orderStatus] ?? 0)]);
 
         $managerSummary = [
             self::STATUS_PENDING => (int) ($summary[self::STATUS_PENDING] ?? 0),
@@ -150,6 +150,7 @@ class PurchaseOrderController extends Controller
         return view('purchase-orders.create', [
             'accounts' => $this->accounts(),
             'ingredients' => $this->ingredients(),
+            'suggestedIngredients' => $this->ingredients()->where('SoLuongTonKho', '<', 50),
             'nextCode' => $this->nextOrderCode(),
             'currentAccountCode' => auth()->user()->MaTaiKhoan,
         ]);
@@ -179,7 +180,7 @@ class PurchaseOrderController extends Controller
             ]);
 
             DB::table('ChiTietDonDatHang')->insert(
-                $items->map(fn ($item) => [
+                $items->map(fn($item) => [
                     'MaDonDatHang' => $orderCode,
                     'MaNguyenLieu' => $item['MaNguyenLieu'],
                     'SoLuongDat' => $item['SoLuongDat'],
@@ -229,7 +230,7 @@ class PurchaseOrderController extends Controller
             ->where('MaDonDatHang', $order)
             ->orderBy('MaNguyenLieu')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'MaNguyenLieu' => $item->MaNguyenLieu,
                 'SoLuongDat' => $item->SoLuongDat,
             ])
@@ -271,7 +272,7 @@ class PurchaseOrderController extends Controller
                 ->where('MaDonDatHang', $order)
                 ->select('MaNguyenLieu', 'SoLuongDat')
                 ->get()
-                ->map(fn ($item) => [
+                ->map(fn($item) => [
                     'MaNguyenLieu' => $item->MaNguyenLieu,
                     'SoLuongDat' => $item->SoLuongDat,
                 ])
@@ -318,7 +319,7 @@ class PurchaseOrderController extends Controller
                     ->delete();
 
                 DB::table('ChiTietDonDatHang')->insert(
-                    $items->map(fn ($item) => [
+                    $items->map(fn($item) => [
                         'MaDonDatHang' => $order,
                         'MaNguyenLieu' => $item['MaNguyenLieu'],
                         'SoLuongDat' => $item['SoLuongDat'],
@@ -339,7 +340,7 @@ class PurchaseOrderController extends Controller
         });
 
         $routePrefix = request()->routeIs('don-hang.*') ? 'don-hang' : 'purchase-orders';
-        
+
         if ($updated === 'no_changes') {
             return redirect()
                 ->route($routePrefix . '.index')
@@ -508,6 +509,149 @@ class PurchaseOrderController extends Controller
         }
 
         return $this->markAsStocked($order, $validated['MaTaiKhoan'], $validated['GhiChu'] ?? 'Nhập kho từ form quản lý', 'don-hang.show');
+    }
+
+    public function resolveForm(string $order): View
+    {
+        $this->abortUnlessManager();
+
+        $orderData = $this->orderWithCreator($order);
+        $receipt = $this->latestReceipt($order);
+
+        abort_if(! $orderData, 404);
+        abort_if($orderData->TrangThai !== self::STATUS_WAITING_PROCESS || ! $receipt, 403);
+
+        $items = DB::table('ChiTietDonDatHang as c')
+            ->join('NguyenLieu as n', 'n.MaNguyenLieu', '=', 'c.MaNguyenLieu')
+            ->leftJoin('ChiTietPhieuNhanHang as cn', function ($join) use ($receipt) {
+                $join->on('cn.MaDonDatHang', '=', 'c.MaDonDatHang')
+                    ->on('cn.MaNguyenLieu', '=', 'c.MaNguyenLieu')
+                    ->where('cn.MaPhieuNhan', '=', $receipt->MaPhieuNhan);
+            })
+            ->select(
+                'c.MaNguyenLieu',
+                'n.TenNguyenLieu',
+                'c.SoLuongDat',
+                'n.DonViTinh',
+                DB::raw('COALESCE(cn.SoLuongThucNhan, 0) as SoLuongThucNhan'),
+                DB::raw('COALESCE(cn.SoLuongLoi, 0) as SoLuongLoi'),
+                DB::raw('COALESCE(cn.SoLuongTot, 0) as SoLuongTot'),
+                DB::raw('COALESCE(cn.SoLuongThua, 0) as SoLuongThua'),
+                DB::raw('COALESCE(cn.SoLuongNhapKho, 0) as SoLuongNhapKho')
+            )
+            ->where('c.MaDonDatHang', $order)
+            ->get();
+
+        return view('purchase-orders.resolve', [
+            'order' => $orderData,
+            'receipt' => $receipt,
+            'items' => $items,
+        ]);
+    }
+
+    public function storeResolve(Request $request, string $order): RedirectResponse
+    {
+        $this->abortUnlessManager();
+
+        $orderData = $this->orderWithCreator($order);
+        $receipt = $this->latestReceipt($order);
+
+        abort_if(! $orderData, 404);
+        abort_if($orderData->TrangThai !== self::STATUS_WAITING_PROCESS || ! $receipt, 403);
+
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.LoaiXuLyThieu' => ['nullable', 'in:giao_bu,huy'],
+            'items.*.LoaiXuLyThua' => ['nullable', 'in:nhap_toan_bo,tra'],
+            'items.*.LoaiXuLyLoi' => ['nullable', 'in:tra,doi'],
+            'GhiChu' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $hasGiaoBuOrDoi = false;
+
+        DB::transaction(function () use ($validated, $order, $receipt, &$hasGiaoBuOrDoi, $orderData) {
+            foreach ($validated['items'] as $maNL => $item) {
+                $thongTinNL = DB::table('ChiTietDonDatHang as c')
+                    ->leftJoin('ChiTietPhieuNhanHang as cn', function ($join) use ($receipt, $maNL) {
+                        $join->on('cn.MaPhieuNhan', '=', DB::raw("'{$receipt->MaPhieuNhan}'"))
+                            ->on('cn.MaNguyenLieu', '=', DB::raw("'{$maNL}'"));
+                    })
+                    ->select(
+                        'c.SoLuongDat',
+                        DB::raw('COALESCE(cn.SoLuongThucNhan, 0) as SoLuongThucNhan'),
+                        DB::raw('COALESCE(cn.SoLuongLoi, 0) as SoLuongLoi'),
+                        DB::raw('COALESCE(cn.SoLuongTot, 0) as SoLuongTot'),
+                        DB::raw('COALESCE(cn.SoLuongThua, 0) as SoLuongThua')
+                    )
+                    ->where('c.MaDonDatHang', $order)
+                    ->where('c.MaNguyenLieu', $maNL)
+                    ->first();
+
+                if (!$thongTinNL) continue;
+
+                $soLuongThieu = max(0, $thongTinNL->SoLuongDat - $thongTinNL->SoLuongTot);
+                $soLuongCanGiaoBu = ($item['LoaiXuLyThieu'] ?? null) === 'giao_bu' ? $soLuongThieu : 0;
+                $soLuongCanDoi = ($item['LoaiXuLyLoi'] ?? null) === 'doi' ? $thongTinNL->SoLuongLoi : 0;
+
+                if ($soLuongCanGiaoBu > 0 || $soLuongCanDoi > 0) {
+                    $hasGiaoBuOrDoi = true;
+                }
+
+                // Xu ly thua: nhap toan bo thi them so luong thua vao ton kho
+                if (($item['LoaiXuLyThua'] ?? null) === 'nhap_toan_bo' && $thongTinNL->SoLuongThua > 0) {
+                    DB::table('NguyenLieu')
+                        ->where('MaNguyenLieu', $maNL)
+                        ->increment('SoLuongTonKho', $thongTinNL->SoLuongThua);
+
+                    // Cap nhat so luong nhap kho
+                    DB::table('ChiTietPhieuNhanHang')
+                        ->where('MaPhieuNhan', $receipt->MaPhieuNhan)
+                        ->where('MaNguyenLieu', $maNL)
+                        ->update(['SoLuongNhapKho' => $thongTinNL->SoLuongTot]);
+                }
+
+                // Luu thong tin xu ly
+                if (Schema::hasTable('chitietxulydondathang')) {
+                    DB::table('chitietxulydondathang')->insert([
+                        'MaDonDatHang' => $order,
+                        'MaNguyenLieu' => $maNL,
+                        'LanNhan' => 1,
+                        'LoaiXuLyThieu' => $item['LoaiXuLyThieu'] ?? null,
+                        'LoaiXuLyThua' => $item['LoaiXuLyThua'] ?? null,
+                        'LoaiXuLyLoi' => $item['LoaiXuLyLoi'] ?? null,
+                        'SoLuongCanGiaoBu' => $soLuongCanGiaoBu,
+                        'SoLuongCanDoi' => $soLuongCanDoi,
+                        'GhiChu' => $validated['GhiChu'] ?? null,
+                        'MaTaiKhoanXuLy' => auth()->user()->MaTaiKhoan,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // Cap nhat trang thai don hang
+            $newStatus = $hasGiaoBuOrDoi ? 'Đang xử lý' : self::STATUS_RECEIVED;
+
+            DB::table('DonDatHang')
+                ->where('MaDonDatHang', $order)
+                ->update([
+                    'TrangThai' => $newStatus,
+                    'GhiChu' => $this->appendApprovalNote($order, 'Xử lý đơn', auth()->user()->MaTaiKhoan, $validated['GhiChu'] ?? 'Đã xử lý đơn hàng')
+                ]);
+
+            $this->recordAudit(
+                $order,
+                'Xử lý đơn',
+                $orderData->TrangThai,
+                $newStatus,
+                auth()->user()->MaTaiKhoan,
+                $validated['GhiChu'] ?? 'Đã xử lý đơn hàng'
+            );
+        });
+
+        return redirect()
+            ->route('don-hang.show', $order)
+            ->with('success', 'Đã xử lý đơn hàng thành công!');
     }
 
     public function approve(Request $request, string $order): RedirectResponse
@@ -789,15 +933,15 @@ class PurchaseOrderController extends Controller
             'GhiChu' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.MaNguyenLieu' => ['required', 'exists:NguyenLieu,MaNguyenLieu'],
-            'items.*.SoLuongDat' => ['required', 'integer', 'min:1', 'max:999999'],
+            'items.*.SoLuongDat' => ['required', 'integer', 'min:1', 'max:500'],
         ]);
 
         $items = collect($validated['items'])
-            ->filter(fn ($item) => ! empty($item['MaNguyenLieu']) && (int) $item['SoLuongDat'] > 0)
+            ->filter(fn($item) => ! empty($item['MaNguyenLieu']) && (int) $item['SoLuongDat'] > 0)
             ->groupBy('MaNguyenLieu')
-            ->map(fn ($rows, $code) => [
+            ->map(fn($rows, $code) => [
                 'MaNguyenLieu' => $code,
-                'SoLuongDat' => $rows->sum(fn ($row) => (int) $row['SoLuongDat']),
+                'SoLuongDat' => $rows->sum(fn($row) => (int) $row['SoLuongDat']),
             ])
             ->values();
 
@@ -909,13 +1053,13 @@ class PurchaseOrderController extends Controller
     private function statusCandidates(array $statuses): array
     {
         $normalizedStatuses = array_values(array_unique(array_map(
-            fn (?string $status) => $this->normalizeStatus($status),
+            fn(?string $status) => $this->normalizeStatus($status),
             $statuses
         )));
 
         $aliasedStatuses = array_keys(array_filter(
             self::STATUS_ALIASES,
-            fn (string $canonical) => in_array($canonical, $normalizedStatuses, true)
+            fn(string $canonical) => in_array($canonical, $normalizedStatuses, true)
         ));
 
         return array_values(array_unique(array_merge($normalizedStatuses, $aliasedStatuses)));

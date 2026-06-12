@@ -40,6 +40,7 @@
             <a class="btn btn-outline-primary" href="{{ route('purchase-orders.edit', $order->MaDonDatHang) }}">Sửa đơn</a>
         @endif
         @if ($managerMode && $order->TrangThai === 'Chờ xử lý')
+            <a class="btn btn-lotteria fw-bold" href="{{ route('don-hang.resolve.create', $order->MaDonDatHang) }}">Xử lý đơn</a>
             <a class="btn btn-outline-danger" href="{{ route('don-hang.return.create', $order->MaDonDatHang) }}">Đổi trả</a>
         @endif
         @if ($managerMode && $order->TrangThai === 'Đã nhận hàng')

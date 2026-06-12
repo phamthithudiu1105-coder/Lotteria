@@ -5,7 +5,7 @@
 @php
     $managerMode = request()->routeIs('don-hang.*');
     $routePrefix = $managerMode ? 'don-hang' : 'purchase-orders';
-    $oldItems = old('items', [['MaNguyenLieu' => '', 'SoLuongDat' => 1]]);
+    $oldItems = old('items', $suggestedIngredients->map(fn($item) => ['MaNguyenLieu' => $item->MaNguyenLieu, 'SoLuongDat' => 1])->all());
     $itemCount = count($oldItems);
     $selectedAccount = (string) old('MaTaiKhoan', $currentAccountCode ?? '');
 @endphp
@@ -33,13 +33,7 @@
                 </div>
                 <div class="col-md-4">
                     <label for="MaTaiKhoan" class="form-label fw-semibold">Người lập đơn</label>
-                    <select id="MaTaiKhoan" name="MaTaiKhoan" class="form-select" disabled>
-                        @foreach ($accounts as $account)
-                            <option value="{{ $account->MaTaiKhoan }}" {{ auth()->user()->MaTaiKhoan === $account->MaTaiKhoan ? 'selected' : '' }}>
-                                {{ $account->MaTaiKhoan }} - {{ $account->HoTen }} ({{ $account->VaiTro }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <input id="MaTaiKhoan" type="text" class="form-control" value="{{ auth()->user()->MaTaiKhoan }} - {{ auth()->user()->HoTen }} ({{ auth()->user()->VaiTro }})" readonly>
                 </div>
                 <div class="col-md-4">
                     <label for="GhiChu" class="form-label fw-semibold">Ghi chú</label>
@@ -73,7 +67,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Số lượng</label>
-                            <input type="number" min="1" max="999999" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
+                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
                         </div>
                         <div class="col-md-1 d-grid">
                             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -105,7 +99,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label fw-semibold">Số lượng</label>
-            <input data-name="SoLuongDat" type="number" min="1" max="999999" value="1" class="form-control" required>
+            <input data-name="SoLuongDat" type="number" min="1" max="500" value="1" class="form-control" required>
         </div>
         <div class="col-md-1 d-grid">
             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -113,9 +107,88 @@
     </div>
 </template>
 
+<script id="ingredient-options-data" type="application/json">
+    @json($ingredients->map(function ($ingredient) {
+        return [
+            'value' => $ingredient->MaNguyenLieu,
+            'label' => $ingredient->MaNguyenLieu . ' - ' . $ingredient->TenNguyenLieu . ' | Tồn: ' . $ingredient->SoLuongTonKho . ' ' . $ingredient->DonViTinh,
+        ];
+    })->values())
+</script>
+
 <script>
     const itemsContainer = document.getElementById('items');
+    const ingredientOptionsElement = document.getElementById('ingredient-options-data');
+    const ingredientOptions = JSON.parse(ingredientOptionsElement.textContent || '[]');
     let itemIndex = Number(itemsContainer.dataset.nextIndex || 0);
+
+    function validateQuantity(input) {
+        const value = parseInt(input.value);
+        let errorMsg = '';
+        
+        if (isNaN(value) || value <= 0) {
+            errorMsg = 'Số lượng phải lớn hơn 0';
+        } else if (value > 500) {
+            errorMsg = 'Số lượng không được vượt quá 500';
+        }
+
+        if (errorMsg) {
+            input.setCustomValidity(errorMsg);
+            input.classList.add('is-invalid');
+        } else {
+            input.setCustomValidity('');
+            input.classList.remove('is-invalid');
+        }
+    }
+
+    function getSelectedIngredients() {
+        const selected = [];
+        document.querySelectorAll('.item-row select[name*="MaNguyenLieu"]').forEach(select => {
+            if (select.value) {
+                selected.push(select.value);
+            }
+        });
+        return selected;
+    }
+
+    function updateSelectOptions() {
+        const selectedIngredients = getSelectedIngredients();
+        document.querySelectorAll('.item-row select[name*="MaNguyenLieu"]').forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '';
+            
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Chọn nguyên liệu';
+            select.appendChild(placeholder);
+
+            ingredientOptions.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                
+                if (option.value === currentValue) {
+                    optionElement.selected = true;
+                    select.appendChild(optionElement);
+                } else if (!selectedIngredients.includes(option.value)) {
+                    select.appendChild(optionElement);
+                }
+            });
+        });
+    }
+
+    // Thêm sự kiện cho tất cả input số lượng hiện có
+    document.querySelectorAll('input[name*="SoLuongDat"]').forEach(input => {
+        input.addEventListener('input', function() {
+            validateQuantity(this);
+        });
+        validateQuantity(input);
+    });
+
+    // Thêm sự kiện change cho tất cả select hiện có
+    document.querySelectorAll('select[name*="MaNguyenLieu"]').forEach(select => {
+        select.addEventListener('change', updateSelectOptions);
+    });
 
     function addItemRow() {
         const template = document.getElementById('item-template').content.cloneNode(true);
@@ -123,19 +196,36 @@
             input.name = 'items[' + itemIndex + '][' + input.dataset.name + ']';
             input.removeAttribute('data-name');
         });
+        const quantityInput = template.querySelector('input[type="number"]');
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                validateQuantity(this);
+            });
+        }
+        const selectInput = template.querySelector('select[name*="MaNguyenLieu"]');
+        if (selectInput) {
+            selectInput.addEventListener('change', updateSelectOptions);
+        }
         itemsContainer.appendChild(template);
         itemIndex++;
         itemsContainer.dataset.nextIndex = String(itemIndex);
+        updateSelectOptions();
     }
 
     function removeItemRow(button) {
         const rows = document.querySelectorAll('.item-row');
         if (rows.length === 1) {
             rows[0].querySelector('select').value = '';
-            rows[0].querySelector('input[type="number"]').value = 1;
-            return;
+            const quantityInput = rows[0].querySelector('input[type="number"]');
+            quantityInput.value = 1;
+            validateQuantity(quantityInput);
+        } else {
+            button.closest('.item-row').remove();
         }
-        button.closest('.item-row').remove();
+        updateSelectOptions();
     }
+
+    // Khởi tạo select options ban đầu
+    document.addEventListener('DOMContentLoaded', updateSelectOptions);
 </script>
 @endsection

@@ -10,6 +10,7 @@ class DonHangNVController extends Controller
     private const STATUS_WAITING_RECEIVE = 'Chờ nhận hàng';
     private const STATUS_RECEIVED = 'Đã nhận hàng';
     private const STATUS_WAITING_PROCESS = 'Chờ xử lý';
+    private const STATUS_PROCESSING = 'Đang xử lý';
 
     public function index()
     {
@@ -43,27 +44,113 @@ class DonHangNVController extends Controller
 
         abort_if(!$orderData, 404);
 
-        $items = DB::table('ChiTietDonDatHang as c')
+        // Lấy thông tin lần nhận trước nếu có
+        $previousReceipts = DB::table('PhieuNhanHang')
+            ->where('MaDonDatHang', $order)
+            ->orderBy('NgayNhan', 'desc')
+            ->get();
+
+        $isSecondReceipt = $previousReceipts->count() > 0;
+
+        // Lấy thông tin cần xử lý từ bảng chitietxulydondathang
+        $processingItems = collect();
+        if (DB::getSchemaBuilder()->hasTable('chitietxulydondathang')) {
+            $processingItems = DB::table('chitietxulydondathang')
+                ->where('MaDonDatHang', $order)
+                ->get()
+                ->keyBy('MaNguyenLieu');
+        }
+
+        // Tách items thành giao bù và đổi trả
+        $giaoBuItems = collect();
+        $doiTraItems = collect();
+
+        $allItems = DB::table('ChiTietDonDatHang as c')
             ->join('NguyenLieu as n', 'n.MaNguyenLieu', '=', 'c.MaNguyenLieu')
             ->select('c.*', 'n.TenNguyenLieu', 'n.DonViTinh')
             ->where('c.MaDonDatHang', $order)
-            ->get();
+            ->get()
+            ->map(function ($item) use ($processingItems, $isSecondReceipt) {
+                if ($isSecondReceipt && $processingItems->has($item->MaNguyenLieu)) {
+                    $procItem = $processingItems[$item->MaNguyenLieu];
+                    $item->SoLuongCanGiaoBu = $procItem->SoLuongCanGiaoBu;
+                    $item->SoLuongCanDoi = $procItem->SoLuongCanDoi;
+                    $item->LoaiXuLyThieu = $procItem->LoaiXuLyThieu;
+                    $item->LoaiXuLyThua = $procItem->LoaiXuLyThua;
+                    $item->LoaiXuLyLoi = $procItem->LoaiXuLyLoi;
+                    $item->SoLuongCanNhan = $procItem->SoLuongCanGiaoBu + $procItem->SoLuongCanDoi;
+                } else {
+                    $item->SoLuongCanGiaoBu = 0;
+                    $item->SoLuongCanDoi = 0;
+                    $item->LoaiXuLyThieu = null;
+                    $item->LoaiXuLyThua = null;
+                    $item->LoaiXuLyLoi = null;
+                    $item->SoLuongCanNhan = $item->SoLuongDat;
+                }
+                return $item;
+            });
 
-        return view('nhanvien.tao-phieu-nhan-hang', compact('orderData', 'items'));
+        foreach ($allItems as $item) {
+            if ($item->LoaiXuLyThieu === 'giao_bu' && $item->SoLuongCanGiaoBu > 0) {
+                $giaoBuItems->push($item);
+            }
+            if ($item->SoLuongCanDoi > 0) {
+                $doiTraItems->push($item);
+            }
+        }
+
+        // Lấy thông tin chi tiết các lần nhận trước để hiển thị
+        $previousReceiptDetails = collect();
+        if ($isSecondReceipt && DB::getSchemaBuilder()->hasTable('ChiTietPhieuNhanHang')) {
+            $previousReceiptDetails = DB::table('ChiTietPhieuNhanHang')
+                ->where('MaDonDatHang', $order)
+                ->where('LanNhan', 1)
+                ->get()
+                ->keyBy('MaNguyenLieu');
+        }
+
+        return view('nhanvien.tao-phieu-nhan-hang', compact('orderData', 'giaoBuItems', 'doiTraItems', 'isSecondReceipt', 'previousReceiptDetails', 'processingItems'));
     }
 
     public function store(Request $request, $order)
     {
-        $request->validate([
+        // Validate based on receipt type
+        $soLanNhan = DB::table('PhieuNhanHang')->where('MaDonDatHang', $order)->count() + 1;
+        $validationRules = [
             'NgayNhan' => 'required|date',
             'GhiChu' => 'nullable|string|max:255',
-            'items' => 'required|array|min:1',
-            'items.*.SoLuongThucNhan' => 'required|integer|min:0',
-            'items.*.NgaySanXuat' => 'required|date|before_or_equal:today',
-            'items.*.HanSuDung' => 'required|date|after:items.*.NgaySanXuat',
-        ], [
+        ];
+
+        if ($soLanNhan === 1) {
+            $validationRules['items'] = 'required|array|min:1';
+            $validationRules['items.*.SoLuongThucNhan'] = 'required|integer|min:0';
+            $validationRules['items.*.SoLuongLoi'] = 'required|integer|min:0|lte:items.*.SoLuongThucNhan';
+            $validationRules['items.*.NgaySanXuat'] = 'required|date|before_or_equal:today';
+            $validationRules['items.*.HanSuDung'] = 'required|date|after:items.*.NgaySanXuat';
+        } else {
+            $validationRules['giaoBuItems'] = 'nullable|array';
+            $validationRules['giaoBuItems.*.SoLuongThucNhan'] = 'required|integer|min:0';
+            $validationRules['giaoBuItems.*.SoLuongLoi'] = 'required|integer|min:0|lte:giaoBuItems.*.SoLuongThucNhan';
+            $validationRules['giaoBuItems.*.NgaySanXuat'] = 'required|date|before_or_equal:today';
+            $validationRules['giaoBuItems.*.HanSuDung'] = 'required|date|after:giaoBuItems.*.NgaySanXuat';
+
+            $validationRules['doiTraItems'] = 'nullable|array';
+            $validationRules['doiTraItems.*.SoLuongThucNhan'] = 'required|integer|min:0';
+            $validationRules['doiTraItems.*.SoLuongLoi'] = 'required|integer|min:0|lte:doiTraItems.*.SoLuongThucNhan';
+            $validationRules['doiTraItems.*.NgaySanXuat'] = 'required|date|before_or_equal:today';
+            $validationRules['doiTraItems.*.HanSuDung'] = 'required|date|after:doiTraItems.*.NgaySanXuat';
+        }
+
+        $request->validate($validationRules, [
             'items.*.NgaySanXuat.before_or_equal' => 'Ngày sản xuất không được lớn hơn ngày hiện tại.',
             'items.*.HanSuDung.after' => 'Hạn sử dụng phải lớn hơn Ngày sản xuất.',
+            'items.*.SoLuongLoi.lte' => 'Số lượng lỗi không được lớn hơn số lượng thực nhận.',
+            'giaoBuItems.*.NgaySanXuat.before_or_equal' => 'Ngày sản xuất không được lớn hơn ngày hiện tại.',
+            'giaoBuItems.*.HanSuDung.after' => 'Hạn sử dụng phải lớn hơn Ngày sản xuất.',
+            'giaoBuItems.*.SoLuongLoi.lte' => 'Số lượng lỗi không được lớn hơn số lượng thực nhận.',
+            'doiTraItems.*.NgaySanXuat.before_or_equal' => 'Ngày sản xuất không được lớn hơn ngày hiện tại.',
+            'doiTraItems.*.HanSuDung.after' => 'Hạn sử dụng phải lớn hơn Ngày sản xuất.',
+            'doiTraItems.*.SoLuongLoi.lte' => 'Số lượng lỗi không được lớn hơn số lượng thực nhận.',
         ]);
 
         $currentStatus = DB::table('DonDatHang')->where('MaDonDatHang', $order)->value('TrangThai');
@@ -89,58 +176,110 @@ class DonHangNVController extends Controller
                 'MaDonDatHang' => $order,
             ]);
 
-            $totalSoLuongDat = 0;
-            $totalSoLuongThucNhan = 0;
+            $hasDiscrepancy = false;
             $hasExpiredItem = false;
 
-            // Lưu thông tin lô hàng
-            foreach ($request->items as $item) {
-                $totalSoLuongDat += DB::table('ChiTietDonDatHang')
+            // Lấy thông tin cần nhận cho lần 2 nếu có
+            $processingItems = collect();
+            if (DB::getSchemaBuilder()->hasTable('chitietxulydondathang')) {
+                $processingItems = DB::table('chitietxulydondathang')
+                    ->where('MaDonDatHang', $order)
+                    ->get()
+                    ->keyBy('MaNguyenLieu');
+            }
+
+            // Determine which items to process
+            $itemsToProcess = [];
+            if ($soLanNhan === 1) {
+                $itemsToProcess = $request->items;
+            } else {
+                $itemsToProcess = array_merge(
+                    $request->giaoBuItems ?? [],
+                    $request->doiTraItems ?? []
+                );
+            }
+
+            // Lưu thông tin chi tiết phiếu nhận hàng và lô hàng
+            foreach ($itemsToProcess as $item) {
+                $soLuongDat = DB::table('ChiTietDonDatHang')
                     ->where('MaDonDatHang', $order)
                     ->where('MaNguyenLieu', $item['MaNguyenLieu'])
                     ->value('SoLuongDat');
 
-                $totalSoLuongThucNhan += $item['SoLuongThucNhan'];
-
-                // Tạo mã lô hàng
-                $lastLoHang = DB::table('LoHang')
-                    ->where('MaLoHang', 'like', 'LH%')
-                    ->orderByDesc('MaLoHang')
-                    ->first();
-                $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
-                $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
-
-                // Xác định trạng thái lô hàng
-                $ngayHienTai = now()->startOfDay();
-                $hanSuDung = \Illuminate\Support\Carbon::parse($item['HanSuDung'])->startOfDay();
-                $trangThai = 'Còn hạn';
-                if ($hanSuDung->isBefore($ngayHienTai)) {
-                    $trangThai = 'Hết hạn';
-                    $hasExpiredItem = true;
-                } elseif ($hanSuDung->diffInDays($ngayHienTai) <= 15) {
-                    $trangThai = 'Sắp hết hạn';
+                $soLuongCanNhan = $soLuongDat;
+                if ($soLanNhan > 1 && $processingItems->has($item['MaNguyenLieu'])) {
+                    $procItem = $processingItems[$item['MaNguyenLieu']];
+                    $soLuongCanNhan = $procItem->SoLuongCanGiaoBu + $procItem->SoLuongCanDoi;
                 }
 
-                DB::table('LoHang')->insert([
-                    'MaLoHang' => $maLoHang,
-                    'NgaySanXuat' => $item['NgaySanXuat'],
-                    'HanSuDung' => $item['HanSuDung'],
-                    'SoLuongNhap' => $item['SoLuongThucNhan'],
-                    'SoLuongConLai' => $item['SoLuongThucNhan'],
-                    'TrangThai' => $trangThai,
-                    'MaNguyenLieu' => $item['MaNguyenLieu'],
-                    'MaPhieuNhan' => $maPhieuNhan,
-                ]);
+                $soLuongThucNhan = $item['SoLuongThucNhan'];
+                $soLuongLoi = $item['SoLuongLoi'];
+                $soLuongTot = $soLuongThucNhan - $soLuongLoi;
+                $soLuongThua = max(0, $soLuongTot - $soLuongCanNhan);
+                $soLuongNhapKho = $soLuongTot - $soLuongThua;
 
-                // Cập nhật số lượng tồn kho
-                DB::table('NguyenLieu')
-                    ->where('MaNguyenLieu', $item['MaNguyenLieu'])
-                    ->increment('SoLuongTonKho', $item['SoLuongThucNhan']);
+                // Kiểm tra có sai lệch không
+                if ($soLuongLoi > 0 || $soLuongThua > 0 || $soLuongTot < $soLuongCanNhan) {
+                    $hasDiscrepancy = true;
+                }
+
+                // Lưu chi tiết phiếu nhận hàng
+                if (DB::getSchemaBuilder()->hasTable('ChiTietPhieuNhanHang')) {
+                    DB::table('ChiTietPhieuNhanHang')->insert([
+                        'MaPhieuNhan' => $maPhieuNhan,
+                        'MaDonDatHang' => $order,
+                        'MaNguyenLieu' => $item['MaNguyenLieu'],
+                        'LanNhan' => $soLanNhan,
+                        'SoLuongDat' => $soLuongCanNhan,
+                        'SoLuongThucNhan' => $soLuongThucNhan,
+                        'SoLuongLoi' => $soLuongLoi,
+                        'SoLuongTot' => $soLuongTot,
+                        'SoLuongThua' => $soLuongThua,
+                        'SoLuongNhapKho' => $soLuongNhapKho,
+                    ]);
+                }
+
+                // Chỉ tạo lô hàng và nhập kho cho số lượng tốt
+                if ($soLuongNhapKho > 0) {
+                    // Tạo mã lô hàng
+                    $lastLoHang = DB::table('LoHang')
+                        ->where('MaLoHang', 'like', 'LH%')
+                        ->orderByDesc('MaLoHang')
+                        ->first();
+                    $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
+                    $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
+
+                    // Xác định trạng thái lô hàng
+                    $ngayHienTai = now()->startOfDay();
+                    $hanSuDung = \Illuminate\Support\Carbon::parse($item['HanSuDung'])->startOfDay();
+                    $trangThai = 'Còn hạn';
+                    if ($hanSuDung->isBefore($ngayHienTai)) {
+                        $trangThai = 'Hết hạn';
+                        $hasExpiredItem = true;
+                    } elseif ($hanSuDung->diffInDays($ngayHienTai) <= 15) {
+                        $trangThai = 'Sắp hết hạn';
+                    }
+
+                    DB::table('LoHang')->insert([
+                        'MaLoHang' => $maLoHang,
+                        'NgaySanXuat' => $item['NgaySanXuat'],
+                        'HanSuDung' => $item['HanSuDung'],
+                        'SoLuongNhap' => $soLuongNhapKho,
+                        'SoLuongConLai' => $soLuongNhapKho,
+                        'TrangThai' => $trangThai,
+                        'MaNguyenLieu' => $item['MaNguyenLieu'],
+                        'MaPhieuNhan' => $maPhieuNhan,
+                    ]);
+
+                    // Cập nhật số lượng tồn kho
+                    DB::table('NguyenLieu')
+                        ->where('MaNguyenLieu', $item['MaNguyenLieu'])
+                        ->increment('SoLuongTonKho', $soLuongNhapKho);
+                }
             }
 
             // Xác định trạng thái mới của đơn hàng
-            $isFullyReceived = ($totalSoLuongDat == $totalSoLuongThucNhan);
-            $trangThaiMoi = ($isFullyReceived && !$hasExpiredItem) ? self::STATUS_RECEIVED : self::STATUS_WAITING_PROCESS;
+            $trangThaiMoi = ($hasDiscrepancy || $hasExpiredItem) ? self::STATUS_WAITING_PROCESS : self::STATUS_RECEIVED;
 
             // Lưu lịch sử truy vết (nếu có bảng)
             if (DB::getSchemaBuilder()->hasTable('TruyVetDonDatHang')) {
@@ -150,7 +289,7 @@ class DonHangNVController extends Controller
                     'TrangThaiTruoc' => $currentStatus,
                     'TrangThaiSau' => $trangThaiMoi,
                     'MaTaiKhoan' => auth()->user()->MaTaiKhoan,
-                    'NoiDung' => $request->GhiChu ?? 'Nhân viên tạo phiếu nhận hàng' . ($hasExpiredItem ? ' (Có hàng hết hạn)' : ''),
+                    'NoiDung' => $request->GhiChu ?? "Nhân viên tạo phiếu nhận hàng lần $soLanNhan" . ($hasExpiredItem ? ' (Có hàng hết hạn)' : ''),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -171,8 +310,8 @@ class DonHangNVController extends Controller
                 if ($hasExpiredItem) {
                     $msg .= 'Phát hiện nguyên liệu đã hết hạn sử dụng. ';
                 }
-                if (!$isFullyReceived) {
-                    $msg .= 'Số lượng thực nhận khác số lượng đặt. ';
+                if ($hasDiscrepancy) {
+                    $msg .= 'Phát hiện sai lệch số lượng/lỗi hàng. ';
                 }
                 $msg .= 'Đơn hàng chuyển trạng thái Chờ xử lý.';
 
@@ -189,6 +328,7 @@ class DonHangNVController extends Controller
     {
         return [
             self::STATUS_WAITING_RECEIVE,
+            self::STATUS_PROCESSING,
         ];
     }
 }

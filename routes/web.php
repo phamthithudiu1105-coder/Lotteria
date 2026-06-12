@@ -78,6 +78,8 @@ Route::middleware(['auth', 'can:isQuanLy'])->group(function () {
         Route::post('/{order}/doi-tra', [PurchaseOrderController::class, 'storeReturn'])->name('return.store');
         Route::get('/{order}/nhap-kho', [PurchaseOrderController::class, 'stockForm'])->name('stock.create');
         Route::post('/{order}/nhap-kho', [PurchaseOrderController::class, 'stockFromForm'])->name('stock.store');
+        Route::get('/{order}/xu-ly', [PurchaseOrderController::class, 'resolveForm'])->name('resolve.create');
+        Route::post('/{order}/xu-ly', [PurchaseOrderController::class, 'storeResolve'])->name('resolve.store');
     });
 
     Route::prefix('quan-ly')->group(function () {
