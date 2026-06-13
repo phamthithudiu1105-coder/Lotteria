@@ -984,7 +984,22 @@ class PurchaseOrderController extends Controller
             ->orderBy('c.MaNguyenLieu')
             ->get();
 
-        if (! $receiptCode || ! Schema::hasTable('LoHang')) {
+        if (! Schema::hasTable('LoHang')) {
+            return $orderItems->map(function ($item) {
+                $item->SoLuongNhan = 0;
+                $item->ChenhLech = 0 - (int) $item->SoLuongDat;
+                $item->KetQua = 'Thiếu';
+
+                return $item;
+            });
+        }
+
+        // Lấy tất cả mã phiếu nhận hàng của đơn hàng này
+        $receiptCodes = DB::table('PhieuNhanHang')
+            ->where('MaDonDatHang', $order)
+            ->pluck('MaPhieuNhan');
+
+        if ($receiptCodes->isEmpty()) {
             return $orderItems->map(function ($item) {
                 $item->SoLuongNhan = 0;
                 $item->ChenhLech = 0 - (int) $item->SoLuongDat;
@@ -996,7 +1011,7 @@ class PurchaseOrderController extends Controller
 
         $receivedMap = DB::table('LoHang')
             ->select('MaNguyenLieu', DB::raw('SUM(SoLuongNhap) as SoLuongNhan'))
-            ->where('MaPhieuNhan', $receiptCode)
+            ->whereIn('MaPhieuNhan', $receiptCodes)
             ->groupBy('MaNguyenLieu')
             ->pluck('SoLuongNhan', 'MaNguyenLieu');
 

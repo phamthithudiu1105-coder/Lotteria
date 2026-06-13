@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\NguyenLieu;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class NguyenLieuController extends Controller
 {
@@ -17,6 +18,69 @@ class NguyenLieuController extends Controller
 
         // Truyền dữ liệu đó sang file giao diện
         return view('nguyenlieu.index', compact('danhSachNL'));
+    }
+
+    public function uploadExcel(Request $request)
+    {
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls|max:10240'
+            ]);
+
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            // Bỏ qua dòng tiêu đề đầu tiên
+            array_shift($rows);
+
+            $countInsert = 0;
+            $countUpdate = 0;
+
+            foreach ($rows as $row) {
+                if (empty($row[0])) {
+                    continue; // Bỏ qua hàng nếu không có Mã NL
+                }
+
+                $maNguyenLieu = trim($row[0]);
+                $tenNguyenLieu = trim($row[1] ?? '');
+                $donViTinh = substr(trim($row[2] ?? ''), 0, 20); // Giới hạn độ dài 20 ký tự
+                $nhomHang = substr(trim($row[3] ?? ''), 0, 50); // Giới hạn độ dài 50 ký tự
+                $soLuongTonKho = intval($row[4] ?? 0);
+                $moTa = substr(trim($row[5] ?? null), 0, 255); // Giới hạn độ dài 255 ký tự
+
+                // Tìm kiếm nguyên liệu theo Mã
+                $nguyenLieu = NguyenLieu::where('MaNguyenLieu', $maNguyenLieu)->first();
+
+                if ($nguyenLieu) {
+                    // Cập nhật nếu đã tồn tại - không thay đổi SoLuongTonKho
+                    $nguyenLieu->update([
+                        'TenNguyenLieu' => $tenNguyenLieu ?: $nguyenLieu->TenNguyenLieu,
+                        'NhomHang' => $nhomHang ?: $nguyenLieu->NhomHang,
+                        'DonViTinh' => $donViTinh ?: $nguyenLieu->DonViTinh,
+                        'MoTa' => $moTa,
+                    ]);
+                    $countUpdate++;
+                } else {
+                    // Thêm mới nếu chưa có - SoLuongTonKho mặc định = 0
+                    NguyenLieu::create([
+                        'MaNguyenLieu' => $maNguyenLieu,
+                        'TenNguyenLieu' => $tenNguyenLieu,
+                        'NhomHang' => $nhomHang,
+                        'SoLuongTonKho' => 0,
+                        'DonViTinh' => $donViTinh,
+                        'MoTa' => $moTa,
+                    ]);
+                    $countInsert++;
+                }
+            }
+
+            return redirect('/nguyen-lieu')->with('success', "Đã xử lý thành công! Thêm mới {$countInsert} phần tử, cập nhật {$countUpdate} phần tử.");
+
+        } catch (\Exception $e) {
+            return redirect('/nguyen-lieu')->with('error', 'Lỗi: ' . $e->getMessage());
+        }
     }
 
     /**

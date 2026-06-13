@@ -60,6 +60,7 @@ Route::middleware(['auth', 'can:isManagementUser'])->group(function () {
 
 Route::middleware(['auth', 'can:isCuaHangTruong'])->group(function () {
     Route::resource('nguyen-lieu', NguyenLieuController::class);
+    Route::post('nguyen-lieu/upload-excel', [NguyenLieuController::class, 'uploadExcel'])->name('nguyen-lieu.upload-excel');
     Route::resource('tai-khoan', TaiKhoanController::class);
 });
 
