@@ -22,7 +22,8 @@
 </style>
 
 @php
-    $nguyenLieuCoTheXuat = $danhSachNguyenLieu->where('SoLuongTonKho', '>', 0)->values();
+    $nguyenLieuHienThi = $danhSachNguyenLieu->where('SoLuongTonKho', '>=', 20)->values();
+    $nguyenLieuTimKiem = $danhSachNguyenLieu->where('SoLuongTonKho', '<', 20)->values();
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,14 +35,14 @@
 
 <div class="card page-card mb-3">
     <div class="card-body">
-        <label for="searchInput" class="form-label fw-semibold text-muted">Chọn nguyên liệu</label>
+        <label for="searchInput" class="form-label fw-semibold text-muted">Thêm nguyên liệu khác</label>
         <div class="position-relative">
             <input type="text" id="searchInput" class="form-control form-control-lg border-danger"
-                   placeholder="Bấm vào đây để xem toàn bộ nguyên liệu hoặc nhập tên/mã để lọc..." autocomplete="off">
+                   placeholder="Tìm kiếm nguyên liệu có tồn kho dưới 20..." autocomplete="off">
             <div id="searchDropdown" class="list-group search-dropdown w-100"></div>
         </div>
         <div class="search-help mt-2">
-            Hiện có {{ $nguyenLieuCoTheXuat->count() }} nguyên liệu còn tồn kho và sẵn sàng để xuất.
+            Hiện có {{ $nguyenLieuTimKiem->count() }} nguyên liệu có tồn kho dưới 20 có thể thêm vào.
         </div>
     </div>
 </div>
@@ -51,7 +52,7 @@
     <div class="card page-card">
         <div class="card-header bg-lotteria d-flex justify-content-between align-items-center">
             <h6 class="mb-0">Danh Sách Nguyên Liệu Chờ Xuất</h6>
-            <span class="badge bg-warning text-dark" id="countBadge">0 đã chọn</span>
+            <span class="badge bg-warning text-dark" id="countBadge">{{ $nguyenLieuHienThi->count() }} nguyên liệu</span>
         </div>
 
         <div class="table-responsive">
@@ -67,11 +68,24 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <tr id="emptyRow">
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <p class="mb-0">Chưa có nguyên liệu nào được chọn.</p>
+                    @foreach($nguyenLieuHienThi as $nl)
+                    <tr id="row-{{ $nl->MaNguyenLieu }}">
+                        <td>{{ $nl->MaNguyenLieu }}</td>
+                        <td class="fw-bold text-danger">{{ $nl->TenNguyenLieu }}</td>
+                        <td>{{ $nl->NhomHang }}</td>
+                        <td class="text-primary fw-bold">{{ $nl->SoLuongTonKho }} {{ $nl->DonViTinh }}</td>
+                        <td>
+                            <input type="number" name="nguyen_lieu[{{ $nl->MaNguyenLieu }}]"
+                                   class="form-control form-control-sm text-center"
+                                   min="0" max="{{ max($nl->SoLuongTonKho, 20) }}" value="20">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ $nl->MaNguyenLieu }}" title="Xóa dòng này">
+                                Xóa
+                            </button>
                         </td>
                     </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -84,7 +98,7 @@
 </form>
 
 <script>
-    const nguyenLieus = @json($nguyenLieuCoTheXuat);
+    const nguyenLieusTimKiem = @json($nguyenLieuTimKiem);
 </script>
 
 <script>
@@ -92,10 +106,10 @@
         const searchInput = document.getElementById('searchInput');
         const searchDropdown = document.getElementById('searchDropdown');
         const tableBody = document.getElementById('tableBody');
-        const emptyRow = document.getElementById('emptyRow');
         const countBadge = document.getElementById('countBadge');
 
-        let selectedItems = new Set();
+        let selectedItems = new Set(@json($nguyenLieuHienThi->pluck('MaNguyenLieu')));
+        let totalItems = {{ $nguyenLieuHienThi->count() }};
 
         // Hàm triệt tiêu dấu tiếng Việt và đưa về chữ thường
         function xoaDauTiengViet(str) {
@@ -108,7 +122,6 @@
         }
 
         function renderDropdown(showAll = false) {
-            // Lấy từ khóa và ép về dạng không dấu
             const keyword = xoaDauTiengViet(searchInput.value);
             searchDropdown.innerHTML = '';
 
@@ -117,7 +130,7 @@
                 return;
             }
 
-            const filtered = nguyenLieus.filter(nl => {
+            const filtered = nguyenLieusTimKiem.filter(nl => {
                 if (selectedItems.has(nl.MaNguyenLieu)) {
                     return false;
                 }
@@ -126,7 +139,6 @@
                     return true;
                 }
 
-                // Ép tên và mã nguyên liệu về dạng không dấu để đem ra so sánh với từ khóa
                 const tenNL = xoaDauTiengViet(nl.TenNguyenLieu);
                 const maNL = xoaDauTiengViet(nl.MaNguyenLieu);
 
@@ -134,8 +146,8 @@
             });
 
             if (filtered.length === 0) {
-                const message = selectedItems.size === nguyenLieus.length
-                    ? 'Bạn đã chọn hết nguyên liệu có thể xuất.'
+                const message = selectedItems.size === {{ $danhSachNguyenLieu->count() }}
+                    ? 'Bạn đã chọn hết nguyên liệu.'
                     : 'Không tìm thấy nguyên liệu chưa chọn...';
                 searchDropdown.innerHTML = `<div class="list-group-item text-muted">${message}</div>`;
                 searchDropdown.style.display = 'block';
@@ -173,10 +185,7 @@
                 return;
             }
 
-            if (emptyRow) {
-                emptyRow.style.display = 'none';
-            }
-
+            const defaultValue = Math.min(20, nl.SoLuongTonKho);
             const tr = document.createElement('tr');
             tr.id = `row-${nl.MaNguyenLieu}`;
             tr.innerHTML = `
@@ -187,7 +196,7 @@
                 <td>
                     <input type="number" name="nguyen_lieu[${nl.MaNguyenLieu}]"
                            class="form-control form-control-sm text-center"
-                           min="1" max="${nl.SoLuongTonKho}" value="1" required>
+                           min="0" max="${nl.SoLuongTonKho}" value="${defaultValue}">
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="${nl.MaNguyenLieu}" title="Xóa dòng này">
@@ -198,6 +207,7 @@
 
             tableBody.appendChild(tr);
             selectedItems.add(nl.MaNguyenLieu);
+            totalItems++;
             updateBadge();
         }
 
@@ -212,11 +222,8 @@
             if (row) {
                 row.remove();
                 selectedItems.delete(maNL);
+                totalItems--;
                 updateBadge();
-
-                if (selectedItems.size === 0 && emptyRow) {
-                    emptyRow.style.display = 'table-row';
-                }
 
                 if (document.activeElement === searchInput || searchDropdown.style.display === 'block') {
                     renderDropdown(true);
@@ -225,7 +232,7 @@
         });
 
         function updateBadge() {
-            countBadge.textContent = `${selectedItems.size} đã chọn`;
+            countBadge.textContent = `${totalItems} nguyên liệu`;
         }
 
         searchInput.addEventListener('focus', function() {
