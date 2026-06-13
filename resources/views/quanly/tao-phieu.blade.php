@@ -23,7 +23,7 @@
 
 @php
     $nguyenLieuHienThi = $danhSachNguyenLieu->where('SoLuongTonKho', '>=', 20)->values();
-    $nguyenLieuTimKiem = $danhSachNguyenLieu->where('SoLuongTonKho', '<', 20)->values();
+    $nguyenLieuTimKiem = $danhSachNguyenLieu->values();
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -38,11 +38,11 @@
         <label for="searchInput" class="form-label fw-semibold text-muted">Thêm nguyên liệu khác</label>
         <div class="position-relative">
             <input type="text" id="searchInput" class="form-control form-control-lg border-danger"
-                   placeholder="Tìm kiếm nguyên liệu có tồn kho dưới 20..." autocomplete="off">
+                   placeholder="Tìm kiếm nguyên liệu..." autocomplete="off">
             <div id="searchDropdown" class="list-group search-dropdown w-100"></div>
         </div>
         <div class="search-help mt-2">
-            Hiện có {{ $nguyenLieuTimKiem->count() }} nguyên liệu có tồn kho dưới 20 có thể thêm vào.
+            Hiện có {{ $nguyenLieuTimKiem->count() }} nguyên liệu có thể tìm kiếm và thêm vào.
         </div>
     </div>
 </div>

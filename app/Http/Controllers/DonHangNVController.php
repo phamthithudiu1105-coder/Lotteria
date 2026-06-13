@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class DonHangNVController extends Controller
 {
     private const STATUS_WAITING_RECEIVE = 'Chờ nhận hàng';
-    private const STATUS_RECEIVED = 'Đã nhận hàng';
+    private const STATUS_RECEIVED = 'Hoàn tất';
     private const STATUS_WAITING_PROCESS = 'Chờ xử lý';
     private const STATUS_PROCESSING = 'Đang xử lý';
 
@@ -300,11 +300,33 @@ class DonHangNVController extends Controller
                 ->where('MaDonDatHang', $order)
                 ->update(['TrangThai' => $trangThaiMoi]);
 
+            // Send notification to managers
+            $managerAccounts = DB::table('TaiKhoan')
+                ->whereIn('VaiTro', ['Quản lý', 'Quan ly'])
+                ->get();
+
+            $notificationType = $trangThaiMoi === self::STATUS_WAITING_PROCESS ? 'donhang_waiting' : 'donhang_completed';
+            $notificationTitle = $trangThaiMoi === self::STATUS_WAITING_PROCESS ? "$order cần xử lý" : "$order đã hoàn tất và nhập kho thành công";
+            $notificationMessage = $trangThaiMoi === self::STATUS_WAITING_PROCESS ? "Đơn hàng $order cần xử lý." : "Đơn hàng $order đã hoàn tất và nhập kho thành công.";
+
+            foreach ($managerAccounts as $manager) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $manager->MaTaiKhoan,
+                    'type' => $notificationType,
+                    'title' => $notificationTitle,
+                    'message' => $notificationMessage,
+                    'data' => json_encode(['MaDonDatHang' => $order]),
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
             DB::commit();
 
             if ($trangThaiMoi === self::STATUS_RECEIVED) {
                 return redirect()->route('ds-don-hang.index')
-                    ->with('success', 'Tạo phiếu nhận hàng thành công! Đơn hàng đã chuyển trạng thái Đã nhận hàng.');
+                    ->with('success', 'Tạo phiếu nhận hàng thành công! Đơn hàng đã chuyển trạng thái Hoàn tất.');
             } else {
                 $msg = 'Tạo phiếu nhận hàng thành công! ';
                 if ($hasExpiredItem) {

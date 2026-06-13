@@ -14,7 +14,8 @@
         'Đang đổi trả' => 'Đang đổi trả',
         'Từ chối' => 'Từ chối',
         'Đã hủy' => 'Đã hủy',
-        'Đã nhận hàng' => 'Đã nhận hàng',
+        'Đã nhận hàng' => 'Hoàn tất',
+        'Hoàn tất' => 'Hoàn tất',
         'Đã nhập kho' => 'Đã nhập kho',
     ];
     $sortIcon = function (string $column) use ($sort, $direction) {
@@ -67,8 +68,8 @@
         <div class="col-md-3">
             <div class="card page-card summary-tile h-100">
                 <div class="card-body">
-                    <div class="text-muted fw-semibold">Đã nhận hàng</div>
-                    <div class="display-6 fw-bold text-success">{{ $managerSummary['Đã nhận hàng'] ?? 0 }}</div>
+                    <div class="text-muted fw-semibold">Hoàn tất</div>
+                    <div class="display-6 fw-bold text-success">{{ $managerSummary['Hoàn tất'] ?? $managerSummary['Đã nhận hàng'] ?? 0 }}</div>
                 </div>
             </div>
         </div>
@@ -200,7 +201,7 @@
                                                 @csrf
                                                 <button class="btn btn-sm btn-outline-success" type="submit">Nhận hàng</button>
                                             </form>
-                                        @elseif ($order->TrangThai === 'Đã nhận hàng')
+                                        @elseif ($order->TrangThai === 'Đã nhận hàng' || $order->TrangThai === 'Hoàn tất')
                                             <form method="post" action="{{ route('purchase-orders.stock', $order->MaDonDatHang) }}">
                                                 @csrf
                                                 <button class="btn btn-sm btn-success" type="submit">Nhập kho</button>

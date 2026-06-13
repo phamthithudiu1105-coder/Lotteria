@@ -15,7 +15,7 @@ class PurchaseOrderController extends Controller
     private const STATUS_WAITING_RECEIVE = 'Chờ nhận hàng';
     private const STATUS_REJECTED = 'Từ chối';
     private const STATUS_CANCELLED = 'Đã hủy';
-    private const STATUS_RECEIVED = 'Đã nhận hàng';
+    private const STATUS_RECEIVED = 'Hoàn tất';
     private const STATUS_WAITING_PROCESS = 'Chờ xử lý';
     private const STATUS_RETURNING = 'Đang đổi trả';
     private const STATUS_STOCKED = 'Đã nhập kho';
@@ -25,6 +25,7 @@ class PurchaseOrderController extends Controller
         'Tu choi' => self::STATUS_REJECTED,
         'Da huy' => self::STATUS_CANCELLED,
         'Da nhan hang' => self::STATUS_RECEIVED,
+        'Đã nhận hàng' => self::STATUS_RECEIVED,
         'Cho xu ly' => self::STATUS_WAITING_PROCESS,
         'Dang doi tra' => self::STATUS_RETURNING,
         'Da nhap kho' => self::STATUS_STOCKED,
@@ -668,6 +669,7 @@ class PurchaseOrderController extends Controller
         }
 
         $previousStatus = $this->currentStatus($order);
+        $orderData = DB::table('DonDatHang')->where('MaDonDatHang', $order)->first();
 
         $updated = DB::table('DonDatHang')
             ->where('MaDonDatHang', $order)
@@ -686,6 +688,18 @@ class PurchaseOrderController extends Controller
                 $request->MaTaiKhoan,
                 $request->GhiChuDuyet
             );
+
+            // Send notification to the order creator
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $orderData->MaTaiKhoan,
+                'type' => 'donhang_approved',
+                'title' => 'Đơn hàng đã được phê duyệt',
+                'message' => "Đơn hàng $order đã được phê duyệt.",
+                'data' => json_encode(['MaDonDatHang' => $order]),
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return back()->with(
@@ -708,6 +722,7 @@ class PurchaseOrderController extends Controller
         }
 
         $previousStatus = $this->currentStatus($order);
+        $orderData = DB::table('DonDatHang')->where('MaDonDatHang', $order)->first();
 
         $updated = DB::table('DonDatHang')
             ->where('MaDonDatHang', $order)
@@ -726,6 +741,18 @@ class PurchaseOrderController extends Controller
                 $request->MaTaiKhoan,
                 $request->LyDoTuChoi
             );
+
+            // Send notification to the order creator
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $orderData->MaTaiKhoan,
+                'type' => 'donhang_rejected',
+                'title' => 'Đơn hàng đã bị từ chối',
+                'message' => "Đơn hàng $order đã bị từ chối.",
+                'data' => json_encode(['MaDonDatHang' => $order]),
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return back()->with(
@@ -862,7 +889,7 @@ class PurchaseOrderController extends Controller
             self::STATUS_RETURNING => 'Đang đổi trả',
             self::STATUS_REJECTED => 'Từ chối',
             self::STATUS_CANCELLED => 'Đã hủy',
-            self::STATUS_RECEIVED => 'Đã nhận hàng',
+            self::STATUS_RECEIVED => 'Hoàn tất',
             self::STATUS_STOCKED => 'Đã nhập kho',
         ];
 

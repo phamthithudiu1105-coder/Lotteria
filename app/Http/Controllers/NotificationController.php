@@ -96,6 +96,8 @@ class NotificationController extends Controller
             ->where('id', $id)
             ->update(['is_read' => true]);
 
+        $data = json_decode($notification->data, true);
+
         if ($notification->type === 'kiemke_rejected') {
             return redirect()->route('kiemke.bep');
         }
@@ -118,6 +120,10 @@ class NotificationController extends Controller
 
         if ($notification->type === 'kiemke_stats_available') {
             return redirect()->route('cht.khochinh.thongke');
+        }
+
+        if (in_array($notification->type, ['donhang_approved', 'donhang_rejected', 'donhang_waiting', 'donhang_completed'])) {
+            return redirect()->route('don-hang.show', $data['MaDonDatHang']);
         }
 
         return redirect()->back();
