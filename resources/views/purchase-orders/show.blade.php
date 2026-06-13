@@ -11,7 +11,8 @@
     $statusLabels = [
         'Chờ phê duyệt' => 'Chờ phê duyệt',
         'Chờ nhận hàng' => 'Chờ nhận hàng',
-        'Đã nhận hàng' => 'Đã nhận hàng',
+        'Đã nhận hàng' => 'Hoàn tất',
+        'Hoàn tất' => 'Hoàn tất',
         'Chờ xử lý' => 'Chờ xử lý',
         'Đang đổi trả' => 'Đang đổi trả',
         'Đã nhập kho' => 'Đã nhập kho',
@@ -21,7 +22,7 @@
     $canApprove = $isStoreChiefUser && $order->TrangThai === 'Chờ phê duyệt';
     $canEdit = $isManagerUser && $order->TrangThai === 'Chờ phê duyệt';
     $canCancel = $isManagerUser && $order->TrangThai === 'Chờ phê duyệt';
-    $canStock = $isManagerUser && $order->TrangThai === 'Đã nhận hàng';
+    $canStock = $isManagerUser && ($order->TrangThai === 'Đã nhận hàng' || $order->TrangThai === 'Hoàn tất');
     $canReturn = $isManagerUser && $order->TrangThai === 'Chờ xử lý';
     $totalReceived = collect($reconciliationItems)->sum('SoLuongNhan');
 @endphp

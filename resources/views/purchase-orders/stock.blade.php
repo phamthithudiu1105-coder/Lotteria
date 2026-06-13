@@ -49,7 +49,7 @@
                     </div>
                     <div class="col-md-4">
                         <label for="TrangThaiDon" class="form-label fw-semibold">Trạng thái hiện tại</label>
-                        <input id="TrangThaiDon" class="form-control" value="Đã nhận hàng" disabled>
+                        <input id="TrangThaiDon" class="form-control" value="Hoàn tất" disabled>
                     </div>
                     <div class="col-12">
                         <label for="GhiChu" class="form-label fw-semibold">Ghi chú nhập kho</label>
