@@ -5,7 +5,7 @@
 @php
     $managerMode = request()->routeIs('don-hang.*');
     $routePrefix = $managerMode ? 'don-hang' : 'purchase-orders';
-    $oldItems = old('items', $suggestedIngredients->map(fn($item) => ['MaNguyenLieu' => $item->MaNguyenLieu, 'SoLuongDat' => 1])->all());
+    $oldItems = old('items', $suggestedIngredients->map(fn($item) => ['MaNguyenLieu' => $item->MaNguyenLieu, 'SoLuongDat' => 20])->all());
     $itemCount = count($oldItems);
     $selectedAccount = (string) old('MaTaiKhoan', $currentAccountCode ?? '');
 @endphp
@@ -67,7 +67,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Số lượng</label>
-                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
+                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 20 }}" required>
                         </div>
                         <div class="col-md-1 d-grid">
                             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -99,7 +99,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label fw-semibold">Số lượng</label>
-            <input data-name="SoLuongDat" type="number" min="1" max="500" value="1" class="form-control" required>
+            <input data-name="SoLuongDat" type="number" min="1" max="500" value="20" class="form-control" required>
         </div>
         <div class="col-md-1 d-grid">
             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -217,7 +217,7 @@
         if (rows.length === 1) {
             rows[0].querySelector('select').value = '';
             const quantityInput = rows[0].querySelector('input[type="number"]');
-            quantityInput.value = 1;
+            quantityInput.value = 20;
             validateQuantity(quantityInput);
         } else {
             button.closest('.item-row').remove();

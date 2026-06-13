@@ -9,12 +9,6 @@
         </a>
     </div>
 
-    @if(session('status'))
-        <div class="alert alert-success border-0 shadow-sm mb-4 fw-bold">
-            ✓ {{ session('status') }}
-        </div>
-    @endif
-
     <div class="card shadow border-0">
         <div class="card-body p-0">
             <table class="table table-bordered table-striped text-center align-middle mb-0">
