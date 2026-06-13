@@ -23,7 +23,7 @@ class KiemKeController extends Controller
 
         if ($headerTable !== null) {
             $summary['total'] = DB::table($headerTable)->count();
-            $summary['end_of_day'] = DB::table($headerTable)->where('LoaiKiemKe', 'Cuối ngày')->count();
+            $summary['end_of_day'] = DB::table($headerTable)->whereIn('LoaiKiemKe', ['Cuối ngày', 'Cuối kỳ'])->count();
             $summary['periodic'] = DB::table($headerTable)->where('LoaiKiemKe', 'Định kỳ')->count();
             $summary['pending'] = DB::table($headerTable)->where('TrangThai', 'Chờ duyệt')->count();
             $summary['approved'] = DB::table($headerTable)->where('TrangThai', 'Đã duyệt')->count();

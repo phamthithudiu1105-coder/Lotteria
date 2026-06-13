@@ -9,6 +9,7 @@ use App\Models\NguyenLieu;
 use App\Models\LoHang;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class XuatKhoController extends Controller
 {
@@ -71,6 +72,7 @@ class XuatKhoController extends Controller
             return back()->withErrors(['error' => 'Vui lòng nhập số lượng lớn hơn 0 cho ít nhất một nguyên liệu.']);
         }
 
+        $maPhieuXuat = null;
         DB::beginTransaction();
         try {
             // Cơ chế tự động sinh mã phiếu xuất kho tăng dần liên tục (PX001, PX002, PX003,...)
@@ -135,13 +137,42 @@ class XuatKhoController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('xuatkho.index')->with('success', 'Khởi tạo thành công phiếu xuất kho ' . $maPhieuXuat . ' với trạng thái Chờ xuất hàng.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors([
                 'error' => 'Không thể tạo phiếu xuất kho. Hệ thống đã hoàn tác dữ liệu. Chi tiết lỗi: ' . $e->getMessage()
             ]);
         }
+
+        // Gửi thông báo cho nhân viên
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable) {
+            $employees = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Nhân viên', 'Nhan vien'])
+                ->get();
+
+            foreach ($employees as $employee) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $employee->MaTaiKhoan,
+                    'type' => 'xuatkho_pending',
+                    'title' => 'Bạn có một yêu cầu xuất kho mới',
+                    'message' => 'Có yêu cầu xuất kho mới: ' . $maPhieuXuat,
+                    'MaPhieuXuat' => $maPhieuXuat,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        return redirect()->route('xuatkho.index')->with('success', 'Khởi tạo thành công phiếu xuất kho ' . $maPhieuXuat . ' với trạng thái Chờ xuất hàng.');
     }
 
     /**
@@ -191,6 +222,7 @@ class XuatKhoController extends Controller
             'thuc_lay.required' => 'Vui lòng điền số lượng thực lấy cho các nguyên liệu.',
         ]);
 
+        $phieuXuat = null;
         DB::beginTransaction();
         try {
             $phieuXuat = PhieuXuatKho::where('MaPhieuXuat', $id)->firstOrFail();
@@ -251,13 +283,42 @@ class XuatKhoController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('nhanvien.phieuxuat')->with('success', 'Xác nhận hoàn thành xuất hàng thành công. Hệ thống đã tự động trừ tồn kho nguyên liệu.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors([
                 'error' => 'Không thể xác nhận hoàn tất xuất kho. Chi tiết lỗi: ' . $e->getMessage()
             ]);
         }
+
+        // Gửi thông báo cho quản lý
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable && $phieuXuat) {
+            $managers = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Quản lý', 'Quan ly'])
+                ->get();
+
+            foreach ($managers as $manager) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $manager->MaTaiKhoan,
+                    'type' => 'xuatkho_completed',
+                    'title' => 'Yêu cầu xuất kho đã được hoàn thành',
+                    'message' => 'Yêu cầu xuất kho ' . $phieuXuat->MaPhieuXuat . ' đã được hoàn thành',
+                    'MaPhieuXuat' => $phieuXuat->MaPhieuXuat,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        return redirect()->route('nhanvien.phieuxuat')->with('success', 'Xác nhận hoàn thành xuất hàng thành công. Hệ thống đã tự động trừ tồn kho nguyên liệu.');
     }
 
     /**

@@ -203,7 +203,7 @@
                 </div>
 
                 <div class="endday-actions">
-                    <button type="submit" class="btn btn-danger fw-bold endday-submit">Gửi Báo Cáo</button>
+                    <button type="submit" class="btn btn-danger fw-bold endday-submit">Gửi</button>
                 </div>
             </form>
         </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\KiemKeDinhKyController;
 use App\Http\Controllers\KiemKeKhoChinhController;
 use App\Http\Controllers\KiemKeNgayController;
 use App\Http\Controllers\NguyenLieuController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\TaiKhoanController;
 use App\Http\Controllers\XuatKhoController;
@@ -102,6 +103,15 @@ Route::middleware(['auth', 'can:isQuanLy'])->group(function () {
     Route::post('/quan-ly/kho-chinh/chuyen-huong-giai-trinh/{maPhieu}', [KiemKeKhoChinhController::class, 'chuyenHuongGiaiTrinh'])->name('quanly.khochinh.chuyenHuongGiaiTrinh');
     Route::get('/quan-ly/kho-chinh/giai-trinh-form/{maPhieu}', [KiemKeKhoChinhController::class, 'giaiTrinhForm'])->name('quanly.khochinh.giaiTrinhForm');
     Route::post('/quan-ly/kho-chinh/giai-trinh/store/{maPhieu}', [KiemKeKhoChinhController::class, 'taoGiaiTrinh'])->name('quanly.khochinh.giaitrinh');
+});
+
+// Notification routes
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 });
 
 Route::middleware(['auth', 'can:isNhanVien'])->group(function () {

@@ -57,105 +57,100 @@
                 </div>
 
                 <div class="card-body p-0">
-                    <form action="{{ route('quanly.chotca', $phieu['MaPhieuKiemKe']) }}" method="POST" id="form-chotca-{{ $phieu['MaPhieuKiemKe'] }}">
-                        @csrf
-                        <div class="table-responsive">
-                            <table class="table bep-review-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Mã NL</th>
-                                        <th class="text-start">Tên Nguyên Liệu</th>
-                                        <th class="bg-light text-primary">Kho Tổng Xuất</th>
-                                        <th class="bg-warning bg-opacity-25">Bếp Báo Hủy</th>
-                                        <th class="bg-success bg-opacity-25">Bếp Hoàn Kho</th>
-                                        <th>Kết Luận (Quản lý chọn)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($phieu['Details'] as $detail)
-                                        <tr>
-                                            <td class="fw-bold">{{ $detail['MaNguyenLieu'] }}</td>
-                                            <td class="name-col">{{ $detail['TenNguyenLieu'] }}</td>
-                                            <td class="fw-bold text-primary fs-5">{{ $detail['XuatTrongNgay'] }}</td>
-                                            <td class="fw-bold text-danger">{{ $detail['HangHuy'] }}</td>
-                                            <td class="fw-bold text-success fs-5">{{ $detail['ThucTeDem'] }}</td>
-                                            
-                                            <td style="min-width: 220px;">
-                                                @if($phieu['TrangThai'] === 'Chờ duyệt')
-                                                    <div class="d-flex gap-3 justify-content-center">
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="ket_luan[{{ $detail['MaNguyenLieu'] }}]" id="khop_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}" value="Khớp" required>
-                                                            <label class="form-check-label text-success fw-bold" for="khop_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}">Khớp</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="ket_luan[{{ $detail['MaNguyenLieu'] }}]" id="lech_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}" value="Lệch" required>
-                                                            <label class="form-check-label text-danger fw-bold" for="lech_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}">Không Khớp</label>
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <span class="badge bg-secondary">Đã xử lý</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        @if($phieu['PhieuHuy'])
-                            <div class="p-3 pt-4">
-                                <div class="waste-box">
-                                    <div class="waste-title">CHI TIẾT PHIẾU XUẤT HỦY ĐÍNH KÈM: {{ $phieu['PhieuHuy']->MaPhieuHuy }}</div>
-                                    <div class="table-responsive">
-                                        <table class="table waste-table table-sm align-middle mb-0 bg-white text-center">
-                                            <thead>
-                                                <tr>
-                                                    <th>Mã Mặt Hàng</th>
-                                                    <th class="text-start">Tên Nguyên Liệu Hủy</th>
-                                                    <th>Số Lượng Tiêu Hủy</th>
-                                                    <th class="text-start">Lý Do Tiêu Hủy Chi Tiết</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($phieu['PhieuHuyDetails'] as $huy)
-                                                    <tr>
-                                                        <td class="fw-bold">{{ $huy['MaNguyenLieu'] }}</td>
-                                                        <td class="text-start">{{ $huy['TenNguyenLieu'] }}</td>
-                                                        <td class="text-danger fw-bold fs-6">{{ $huy['SoLuongHuy'] }}</td>
-                                                        <td class="text-start">{{ $huy['LyDo'] }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </form>
-
-                    @if($phieu['GhiChu'])
-                        <div class="px-3 pb-3">
-                            <div class="alert alert-light border mb-0">
-                                <div class="fw-bold mb-1">Ghi chú từ chối trước đó:</div>
-                                <div class="text-danger">{{ $phieu['GhiChu'] }}</div>
-                            </div>
-                        </div>
-                    @endif
+            <form action="{{ route('quanly.chotca', $phieu['MaPhieuKiemKe']) }}" method="POST" id="form-chotca-{{ $phieu['MaPhieuKiemKe'] }}">
+                @csrf
+                <div class="table-responsive">
+                    <table class="table bep-review-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mã NL</th>
+                                <th class="text-start">Tên Nguyên Liệu</th>
+                                <th class="bg-light text-primary">Kho Tổng Xuất</th>
+                                <th class="bg-warning bg-opacity-25">Bếp Báo Hủy</th>
+                                <th class="bg-success bg-opacity-25">Bếp Hoàn Kho</th>
+                                <th>Kết Luận (Quản lý chọn)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($phieu['Details'] as $detail)
+                                <tr>
+                                    <td class="fw-bold">{{ $detail['MaNguyenLieu'] }}</td>
+                                    <td class="name-col">{{ $detail['TenNguyenLieu'] }}</td>
+                                    <td class="fw-bold text-primary fs-5">{{ $detail['XuatTrongNgay'] }}</td>
+                                    <td class="fw-bold text-danger">{{ $detail['HangHuy'] }}</td>
+                                    <td class="fw-bold text-success fs-5">{{ $detail['ThucTeDem'] }}</td>
+                                    
+                                    <td style="min-width: 220px;">
+                                        @if($phieu['TrangThai'] === 'Chờ duyệt')
+                                            <div class="d-flex gap-3 justify-content-center">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="ket_luan[{{ $detail['MaNguyenLieu'] }}]" id="khop_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}" value="Khớp" required>
+                                                    <label class="form-check-label text-success fw-bold" for="khop_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}">Khớp</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="ket_luan[{{ $detail['MaNguyenLieu'] }}]" id="lech_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}" value="Lệch" required>
+                                                    <label class="form-check-label text-danger fw-bold" for="lech_{{ $phieu['MaPhieuKiemKe'] }}_{{ $detail['MaNguyenLieu'] }}">Không Khớp</label>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="badge bg-secondary">Đã xử lý</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+
+                @if($phieu['PhieuHuy'])
+                    <div class="p-3 pt-4">
+                        <div class="waste-box">
+                            <div class="waste-title">CHI TIẾT PHIẾU XUẤT HỦY ĐÍNH KÈM: {{ $phieu['PhieuHuy']->MaPhieuHuy }}</div>
+                            <div class="table-responsive">
+                                <table class="table waste-table table-sm align-middle mb-0 bg-white text-center">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã Mặt Hàng</th>
+                                            <th class="text-start">Tên Nguyên Liệu Hủy</th>
+                                            <th>Số Lượng Tiêu Hủy</th>
+                                            <th class="text-start">Lý Do Tiêu Hủy Chi Tiết</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($phieu['PhieuHuyDetails'] as $huy)
+                                            <tr>
+                                                <td class="fw-bold">{{ $huy['MaNguyenLieu'] }}</td>
+                                                <td class="text-start">{{ $huy['TenNguyenLieu'] }}</td>
+                                                <td class="text-danger fw-bold fs-6">{{ $huy['SoLuongHuy'] }}</td>
+                                                <td class="text-start">{{ $huy['LyDo'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if($phieu['GhiChu'])
+                    <div class="px-3 pb-3">
+                        <div class="alert alert-light border mb-0">
+                            <div class="fw-bold mb-1">Ghi chú từ chối trước đó:</div>
+                            <div class="text-danger">{{ $phieu['GhiChu'] }}</div>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="review-actions">
                     @if($phieu['TrangThai'] === 'Chờ duyệt')
                         <div class="review-action-row">
-                            <form action="{{ route('quanly.kiemke.tuchoi', $phieu['MaPhieuKiemKe']) }}" method="POST" class="review-reject-form">
-                                @csrf
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <input type="text" name="ghi_chu_tu_choi" class="form-control review-note" placeholder="Nhập lý do từ chối (bắt buộc nếu không khớp)..." required>
-                                    <button type="submit" class="btn btn-outline-danger px-4 fw-bold">Từ chối & Yêu cầu làm lại</button>
-                                </div>
-                            </form>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <input type="text" name="ghi_chu_tu_choi" id="ghi-chu-tu-choi-{{ $phieu['MaPhieuKiemKe'] }}" class="form-control review-note" placeholder="Nhập lý do từ chối (bắt buộc nếu không khớp)...">
+                                <button type="button" id="btn-tu-choi-{{ $phieu['MaPhieuKiemKe'] }}" class="btn btn-outline-danger px-4 fw-bold">Từ chối & Yêu cầu làm lại</button>
+                            </div>
 
                             <div class="text-end">
-                                <button type="submit" form="form-chotca-{{ $phieu['MaPhieuKiemKe'] }}" class="btn btn-success px-4 fw-bold">Duyệt & Chốt Ca</button>
+                                <button type="submit" id="btn-chot-ca-{{ $phieu['MaPhieuKiemKe'] }}" class="btn btn-success px-4 fw-bold">Duyệt & Chốt Ca</button>
                             </div>
                         </div>
                     @elseif($phieu['TrangThai'] === 'Từ chối')
@@ -164,6 +159,8 @@
                         <div class="text-success fw-semibold">Báo cáo đã được quản lý xác nhận khớp và chốt ca thành công.</div>
                     @endif
                 </div>
+            </form>
+        </div>
             </div>
         @endforeach
     </div>
@@ -173,43 +170,109 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const chotCaForms = document.querySelectorAll('form[id^="form-chotca-"]');
+        const danhSachPhieu = @json($danhSachPhiu);
         
-        chotCaForms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                // Tạm thời chặn form gửi đi ngay lập tức để hiển thị popup
-                e.preventDefault(); 
+        danhSachPhieu.forEach(phieu => {
+            const form = document.getElementById('form-chotca-' + phieu.MaPhieuKiemKe);
+            const btnTuChoi = document.getElementById('btn-tu-choi-' + phieu.MaPhieuKiemKe);
+            const btnChotCa = document.getElementById('btn-chot-ca-' + phieu.MaPhieuKiemKe);
+            const ghiChuInput = document.getElementById('ghi-chu-tu-choi-' + phieu.MaPhieuKiemKe);
 
-                const lechRadios = form.querySelectorAll('input[type="radio"][value="Lệch"]:checked');
-                
-                if (lechRadios.length > 0) {
-                    // Popup báo lỗi khi có ít nhất 1 dòng đánh giá Lệch
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Phát hiện lệch số liệu!',
-                        text: 'Bạn đã đánh giá có nguyên liệu KHÔNG KHỚP. Vui lòng nhập lý do và bấm nút "TỪ CHỐI & YÊU CẦU LÀM LẠI" ở bên dưới thay vì Duyệt chốt ca!',
-                        confirmButtonColor: '#dc3545',
-                        confirmButtonText: 'Đã hiểu'
+            if (form) {
+                // Xử lý nút Từ chối
+                if (btnTuChoi) {
+                    btnTuChoi.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Kiểm tra xem đã chọn đủ radio button chưa
+                        let allSelected = true;
+                        phieu.Details.forEach(detail => {
+                            const radioGroup = document.querySelectorAll('input[name="ket_luan[' + detail.MaNguyenLieu + ']"]:checked');
+                            if (radioGroup.length === 0) {
+                                allSelected = false;
+                            }
+                        });
+
+                        if (!allSelected) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Chưa chọn kết luận!',
+                                text: 'Vui lòng chọn kết luận (Khớp / Không Khớp) cho tất cả nguyên liệu trước khi từ chối!',
+                                confirmButtonColor: '#dc3545',
+                                confirmButtonText: 'Đã hiểu'
+                            });
+                            return;
+                        }
+
+                        // Kiểm tra xem đã nhập lý do từ chối chưa
+                        if (!ghiChuInput || ghiChuInput.value.trim() === '') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Chưa nhập lý do!',
+                                text: 'Vui lòng nhập lý do từ chối trước khi gửi!',
+                                confirmButtonColor: '#dc3545',
+                                confirmButtonText: 'Đã hiểu'
+                            });
+                            return;
+                        }
+
+                        // Xác nhận trước khi từ chối
+                        Swal.fire({
+                            title: 'Xác nhận từ chối?',
+                            text: "Bạn chắc chắn muốn từ chối báo cáo này và yêu cầu bếp làm lại?",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '✓ Vâng, từ chối!',
+                            cancelButtonText: 'Hủy bỏ'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Đổi action của form sang route từ chối rồi submit
+                                form.action = '{{ url('') }}/quan-ly/kiem-ke-bep/tu-choi/' + phieu.MaPhieuKiemKe;
+                                form.submit();
+                            }
+                        });
                     });
-                } else {
-                    // Popup xác nhận chốt ca tuyệt đẹp
-                    Swal.fire({
-                        title: 'Xác nhận duyệt báo cáo?',
-                        text: "Bạn xác nhận số lượng thực tế Bếp báo cáo hoàn toàn khớp với kiểm tra thực tế? Số lượng hoàn kho sẽ được cộng thẳng vào tồn kho hệ thống.",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#198754', // Màu xanh success Bootstrap
-                        cancelButtonColor: '#6c757d', // Màu xám secondary Bootstrap
-                        confirmButtonText: '✓ Vâng, duyệt và chốt ca!',
-                        cancelButtonText: 'Hủy bỏ'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Nếu Quản lý bấm Vâng thì mới thực sự submit gửi về Controller
-                            form.submit(); 
+                }
+
+                // Xử lý nút Chốt ca
+                if (btnChotCa) {
+                    btnChotCa.addEventListener('click', function(e) {
+                        e.preventDefault();
+
+                        const lechRadios = form.querySelectorAll('input[type="radio"][value="Lệch"]:checked');
+                        
+                        if (lechRadios.length > 0) {
+                            // Popup báo lỗi khi có ít nhất 1 dòng đánh giá Lệch
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Phát hiện lệch số liệu!',
+                                text: 'Bạn đã đánh giá có nguyên liệu KHÔNG KHỚP. Vui lòng nhập lý do và bấm nút "TỪ CHỐI & YÊU CẦU LÀM LẠI" ở bên dưới thay vì Duyệt chốt ca!',
+                                confirmButtonColor: '#dc3545',
+                                confirmButtonText: 'Đã hiểu'
+                            });
+                        } else {
+                            // Popup xác nhận chốt ca tuyệt đẹp
+                            Swal.fire({
+                                title: 'Xác nhận duyệt báo cáo?',
+                                text: "Bạn xác nhận số lượng thực tế Bếp báo cáo hoàn toàn khớp với kiểm tra thực tế? Số lượng hoàn kho sẽ được cộng thẳng vào tồn kho hệ thống.",
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonColor: '#198754', // Màu xanh success Bootstrap
+                                cancelButtonColor: '#6c757d', // Màu xám secondary Bootstrap
+                                confirmButtonText: '✓ Vâng, duyệt và chốt ca!',
+                                cancelButtonText: 'Hủy bỏ'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Nếu Quản lý bấm Vâng thì mới thực sự submit gửi về Controller
+                                    form.submit(); 
+                                }
+                            });
                         }
                     });
                 }
-            });
+            }
         });
     });
 </script>

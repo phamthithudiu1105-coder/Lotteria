@@ -126,9 +126,9 @@ class PurchaseOrderController extends Controller
 
         $managerSummary = [
             self::STATUS_PENDING => (int) ($summary[self::STATUS_PENDING] ?? 0),
-            self::STATUS_WAITING_RECEIVE => (int) ($summary[self::STATUS_WAITING_RECEIVE] ?? 0),
+            self::STATUS_WAITING_PROCESS => (int) ($summary[self::STATUS_WAITING_PROCESS] ?? 0),
             self::STATUS_RECEIVED => (int) ($summary[self::STATUS_RECEIVED] ?? 0),
-            self::STATUS_STOCKED => (int) ($summary[self::STATUS_STOCKED] ?? 0),
+            self::STATUS_RETURNING => (int) ($summary[self::STATUS_RETURNING] ?? 0),
         ];
 
         return view('purchase-orders.index', [

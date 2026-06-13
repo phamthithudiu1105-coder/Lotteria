@@ -98,7 +98,7 @@
                 ['label' => 'Xuất kho', 'route' => route('xuatkho.index'), 'active' => request()->routeIs('xuatkho.*')],
                 ['label' => 'Xuất hủy', 'route' => route('xuat-huy.index'), 'active' => request()->routeIs('xuat-huy.*')],
                 ['label' => 'Kiểm kê', 'route' => route('kiem-ke.index'), 'active' => request()->routeIs('kiem-ke.*')],
-                ['label' => 'Duyệt kiểm kê bếp', 'route' => route('quanly.kiemke.bep'), 'active' => request()->routeIs('quanly.kiemke.*')],
+                ['label' => 'Duyệt kiểm kê cuối ngày', 'route' => route('quanly.kiemke.bep'), 'active' => request()->routeIs('quanly.kiemke.*')],
                 ['label' => 'Duyệt kiểm kê định kỳ', 'route' => route('quanly.khochinh.duyet'), 'active' => request()->routeIs('quanly.khochinh.*')],
             ];
         } elseif ($isEmployee) {
@@ -130,8 +130,32 @@
                     </div>
                 @endif
 
-                <div class="d-flex align-items-center text-white gap-2">
+                <div class="d-flex align-items-center text-white gap-3 ms-auto">
                     @auth
+                        <!-- Notification Bell -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell" viewBox="0 0 16 16">
+                                    <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 2a5 5 0 0 1 5 5v4.586l1.707 1.707A1 1 0 0 1 13 15H3a1 1 0 0 1-.707-1.707L4 11.586V7a5 5 0 0 1 4-4zm0 1a4 4 0 0 0-4 4v4.414l-.707.707A.5.5 0 0 0 3.5 13h9a.5.5 0 0 0 .353-.854L12 11.414V7a4 4 0 0 0-4-4z"/>
+                                </svg>
+                                <span id="unreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                    0
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" style="max-width: 400px;">
+                                <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Thông báo</span>
+                                    @auth
+                                        <button id="markAllReadBtn" class="btn btn-link btn-sm text-decoration-none">Đánh dấu đã đọc tất cả</button>
+                                    @endauth
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <div id="notificationsList">
+                                    <!-- Notifications will be loaded here -->
+                                </div>
+                            </ul>
+                        </div>
+
                         <span class="me-2">Xin chào, <strong>{{ auth()->user()->HoTen }}</strong>!</span>
                         <form action="{{ route('logout') }}" method="POST" class="m-0">
                             @csrf
@@ -166,6 +190,110 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @auth
+        <script>
+            // Function to format date
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+
+            // Load notifications
+            async function loadNotifications() {
+                try {
+                    const response = await fetch('{{ route('notifications.index') }}');
+                    const notifications = await response.json();
+                    
+                    const listContainer = document.getElementById('notificationsList');
+                    
+                    if (notifications.length === 0) {
+                        listContainer.innerHTML = '<li class="dropdown-item text-center text-muted">Không có thông báo nào</li>';
+                    } else {
+                        listContainer.innerHTML = notifications.map(notification => `
+                            <li class="dropdown-item ${notification.is_read ? '' : 'fw-bold'}" style="cursor: pointer;">
+                                <a href="/notifications/${notification.id}" class="text-decoration-none text-dark">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">${notification.title}</h6>
+                                            <p class="mb-1 small text-muted">${notification.message}</p>
+                                            <small class="text-muted">${formatDate(notification.created_at)}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        `).join('');
+                    }
+
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            // Load unread count
+            async function loadUnreadCount() {
+                try {
+                    const response = await fetch('{{ route('notifications.unread-count') }}');
+                    const data = await response.json();
+                    
+                    const badge = document.getElementById('unreadBadge');
+                    if (data.count > 0) {
+                        badge.style.display = 'block';
+                        badge.textContent = data.count;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error loading unread count:', error);
+                }
+            }
+
+            // Mark all as read
+            async function markAllAsRead() {
+                try {
+                    const response = await fetch('{{ route('notifications.mark-all-as-read') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    if (response.ok) {
+                        await loadNotifications();
+                        await loadUnreadCount();
+                    }
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            }
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', () => {
+                loadNotifications();
+                loadUnreadCount();
+
+                // Mark all as read button
+                const markAllReadBtn = document.getElementById('markAllReadBtn');
+                if (markAllReadBtn) {
+                    markAllReadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        markAllAsRead();
+                    });
+                }
+
+                // Reload notifications every 30 seconds
+                setInterval(() => {
+                    loadUnreadCount();
+                    loadNotifications();
+                }, 30000);
+            });
+        </script>
+    @endauth
     @stack('scripts')
 </body>
 </html>

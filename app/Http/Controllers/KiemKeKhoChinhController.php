@@ -18,6 +18,8 @@ class KiemKeKhoChinhController extends Controller
         $loHangsDb = DB::table('LoHang')
             ->join('NguyenLieu', 'LoHang.MaNguyenLieu', '=', 'NguyenLieu.MaNguyenLieu')
             ->select('LoHang.*', 'NguyenLieu.TenNguyenLieu')
+            ->where('LoHang.SoLuongConLai', '>', 0)
+            ->orderBy('LoHang.MaLoHang', 'asc')
             ->get();
 
         $phiuKiemKeDienTu = [];
@@ -28,7 +30,7 @@ class KiemKeKhoChinhController extends Controller
 
             if ($soNgayConLai < 0) {
                 $canhBaoHsd = 'HẾT HẠN SỬ DỤNG';
-            } elseif ($soNgayConLai <= 7) {
+            } elseif ($soNgayConLai <= 30) {
                 $canhBaoHsd = 'CẬN HẠN (Còn ' . floor($soNgayConLai) . ' ngày)';
             } else {
                 $canhBaoHsd = 'An toàn';
@@ -85,7 +87,37 @@ class KiemKeKhoChinhController extends Controller
             ]);
         }
 
-        return "<script>alert('Gửi dữ liệu kiểm kê kho chính thành công!'); window.location.href='" . route('khochinh.kiemke') . "';</script>";
+        // Send notification to managers
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable) {
+            $managers = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Quản lý', 'Quan ly'])
+                ->get();
+
+            foreach ($managers as $manager) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $manager->MaTaiKhoan,
+                    'type' => 'kiemke_periodic_pending',
+                    'title' => 'Có phiếu kiểm kê định kỳ cần duyệt',
+                    'message' => 'Nhân viên ' . (Auth::user()->HoTen ?? 'N/A') . ' đã gửi phiếu kiểm kê định kỳ: ' . $maPhieuMoi,
+                    'MaPhieuKiemKe' => $maPhieuMoi,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('khochinh.kiemke')
+            ->with('success', 'Phiếu kiểm kê định kỳ đã được gửi cho Quản lý. Vui lòng chờ duyệt.');
     }
 
     /**
@@ -175,6 +207,51 @@ class KiemKeKhoChinhController extends Controller
     public function chuyenHuongGiaiTrinh($maPhieu)
     {
         DB::table('PhieuKiemKe')->where('MaPhieuKiemKe', $maPhieu)->update(['TrangThai' => 'Đã duyệt']);
+        
+        // Send notification to the employee
+        $phieu = DB::table('PhieuKiemKe')->where('MaPhieuKiemKe', $maPhieu)->first();
+        if ($phieu && $phieu->MaTaiKhoan) {
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $phieu->MaTaiKhoan,
+                'type' => 'kiemke_approved',
+                'title' => 'Phiếu kiểm kê định kỳ đã được duyệt',
+                'message' => "Phiếu kiểm kê định kỳ {$maPhieu} đã được duyệt và chuyển sang giai đoạn giải trình!",
+                'MaPhieuKiemKe' => $maPhieu,
+                'data' => null,
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Send notification to store chiefs
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable) {
+            $storeChiefs = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Cửa hàng trưởng', 'Cua hang truong'])
+                ->get();
+
+            foreach ($storeChiefs as $chief) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $chief->MaTaiKhoan,
+                    'type' => 'kiemke_stats_available',
+                    'title' => 'Báo cáo thống kê sau kiểm kê định kỳ',
+                    'message' => "Báo cáo thống kê sau kiểm kê định kỳ {$maPhieu} đã sẵn sàng!",
+                    'MaPhieuKiemKe' => $maPhieu,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
         return redirect()->route('quanly.khochinh.giaiTrinhForm', $maPhieu);
     }
 
@@ -240,6 +317,50 @@ class KiemKeKhoChinhController extends Controller
             DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->update([
                 'SoLuongConLai' => $d->SoLuongThucTe
             ]);
+        }
+
+        // Send notification to the employee
+        $phieu = DB::table('PhieuKiemKe')->where('MaPhieuKiemKe', $maPhieu)->first();
+        if ($phieu && $phieu->MaTaiKhoan) {
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $phieu->MaTaiKhoan,
+                'type' => 'kiemke_approved',
+                'title' => 'Phiếu kiểm kê định kỳ đã được duyệt',
+                'message' => "Phiếu kiểm kê định kỳ {$maPhieu} đã được duyệt thành công!",
+                'MaPhieuKiemKe' => $maPhieu,
+                'data' => null,
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Send notification to store chiefs
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable) {
+            $storeChiefs = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Cửa hàng trưởng', 'Cua hang truong'])
+                ->get();
+
+            foreach ($storeChiefs as $chief) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $chief->MaTaiKhoan,
+                    'type' => 'kiemke_stats_available',
+                    'title' => 'Báo cáo thống kê sau kiểm kê định kỳ',
+                    'message' => "Báo cáo thống kê sau kiểm kê định kỳ {$maPhieu} đã sẵn sàng!",
+                    'MaPhieuKiemKe' => $maPhieu,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         return redirect()->back()->with('status', 'Xác nhận đối soát thành công! Đã cập nhật tồn kho thực tế và đổi trạng thái phiếu thành Đã duyệt.');

@@ -33,6 +33,7 @@ class KiemKeBepController extends Controller
         if ($rejectedReport && $detailTable !== null) {
             $detailMap = DB::table($detailTable)
                 ->where('MaPhieuKiemKe', $rejectedReport->MaPhieuKiemKe)
+                ->where('TinhTrang', 'Lệch')
                 ->get()
                 ->keyBy('MaNguyenLieu');
         }
@@ -55,13 +56,14 @@ class KiemKeBepController extends Controller
             }
         }
 
-        // Lấy danh sách nguyên liệu đã xuất cho bếp hôm nay
-        $inventorySnapshot = $this->buildKitchenStockSnapshot(now()->toDateString(), $reportTable, $detailTable);
-        $maNguyenLieuTrongNgay = array_keys($inventorySnapshot['issued']);
-
-        // Gộp thêm nguyên liệu của phiếu bị từ chối (để hiển thị lại cho nhân viên sửa)
+        // Lấy danh sách nguyên liệu
         if ($detailMap->isNotEmpty()) {
-            $maNguyenLieuTrongNgay = array_unique(array_merge($maNguyenLieuTrongNgay, $detailMap->keys()->toArray()));
+            // Nếu có phiếu bị từ chối, chỉ lấy những nguyên liệu có TinhTrang = Lệch
+            $maNguyenLieuTrongNgay = $detailMap->keys()->toArray();
+        } else {
+            // Ngược lại, lấy danh sách nguyên liệu đã xuất cho bếp hôm nay
+            $inventorySnapshot = $this->buildKitchenStockSnapshot(now()->toDateString(), $reportTable, $detailTable);
+            $maNguyenLieuTrongNgay = array_keys($inventorySnapshot['issued']);
         }
 
         $nguyenLieusDb = $ingredientTable !== null && !empty($maNguyenLieuTrongNgay)
@@ -91,6 +93,7 @@ class KiemKeBepController extends Controller
         $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
         $wasteDetailTable = $this->resolveExistingTable(['ChiTietPhieuHuy', 'chitietphieuhuy']);
+        $accountTable = $this->resolveExistingTable(['TaiKhoan', 'taikhoan']);
 
         if ($reportTable === null || $detailTable === null || $ingredientTable === null || $wasteHeaderTable === null || $wasteDetailTable === null) {
             return back()->with('error', 'Hệ thống chưa đủ cấu trúc dữ liệu để lập báo cáo kiểm kê cuối ngày.');
@@ -127,9 +130,9 @@ class KiemKeBepController extends Controller
             return back()->withErrors($validationMessages)->withInput();
         }
 
-        DB::transaction(function () use ($request, $requestKiemKe, $reportTable, $detailTable, $wasteHeaderTable, $wasteDetailTable) {
-            $maPhieuKiemKe = $request->input('ma_phieu_cu');
+        $maPhieuKiemKe = $request->input('ma_phieu_cu');
 
+        DB::transaction(function () use ($request, $requestKiemKe, $reportTable, $detailTable, $wasteHeaderTable, $wasteDetailTable, &$maPhieuKiemKe) {
             if ($maPhieuKiemKe) {
                 $existingReport = DB::table($reportTable)
                     ->where('MaPhieuKiemKe', $maPhieuKiemKe)
@@ -224,9 +227,30 @@ class KiemKeBepController extends Controller
             }
         });
 
+        // Gửi thông báo cho quản lý
+        if ($accountTable !== null) {
+            $managers = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Quản lý', 'Quan ly'])
+                ->get();
+
+            foreach ($managers as $manager) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $manager->MaTaiKhoan,
+                    'type' => 'kiemke_pending',
+                    'title' => 'Có phiếu kiểm kê cuối ngày cần duyệt',
+                    'message' => 'Nhân viên ' . Auth::user()->HoTen . ' đã gửi phiếu kiểm kê cuối ngày: ' . $maPhieuKiemKe,
+                    'MaPhieuKiemKe' => $maPhieuKiemKe,
+                    'data' => null,
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
         return redirect()
             ->route('kiemke.bep')
-            ->with('success', 'Báo cáo kiểm kê cuối ngày đã được gửi cho Quản lý. Vui lòng chờ duyệt.');
+            ->with('success', 'Phiếu kiểm kê cuối ngày đã được gửi cho Quản lý. Vui lòng chờ duyệt.');
     }
 
     public function danhSachBaoCao()
@@ -335,26 +359,69 @@ class KiemKeBepController extends Controller
     {
         $request->validate([
             'ghi_chu_tu_choi' => ['required', 'string', 'max:255'],
+            'ket_luan' => ['required', 'array'],
+            'ket_luan.*' => ['required', 'string', 'in:Khớp,Lệch'],
         ]);
 
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
+        $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
 
         if ($reportTable === null) {
             return back()->with('error', 'Không tìm thấy dữ liệu báo cáo kiểm kê để xử lý.');
         }
 
+        $phieu = DB::table($reportTable)->where('MaPhieuKiemKe', $maPhieu)->first();
+        $ghiChu = $request->input('ghi_chu_tu_choi');
+        $ketLuan = $request->input('ket_luan', []);
+
         DB::table($reportTable)
             ->where('MaPhieuKiemKe', $maPhieu)
             ->update([
                 'TrangThai' => $this->statusRejected(),
-                'GhiChu' => $request->input('ghi_chu_tu_choi'),
+                'GhiChu' => $ghiChu,
             ]);
 
         if ($wasteHeaderTable !== null) {
             DB::table($wasteHeaderTable)
                 ->where('MaPhieuKiemKe', $maPhieu)
                 ->update(['TrangThai' => $this->statusRejected()]);
+        }
+
+        // Update TinhTrang for each ingredient based on manager's decision
+        if ($detailTable !== null) {
+            foreach ($ketLuan as $maNguyenLieu => $tinhTrang) {
+                DB::table($detailTable)
+                    ->where('MaPhieuKiemKe', $maPhieu)
+                    ->where('MaNguyenLieu', $maNguyenLieu)
+                    ->update(['TinhTrang' => $tinhTrang]);
+            }
+        }
+
+        // Send notification to the employee
+        if ($phieu && $phieu->MaTaiKhoan) {
+            $details = [];
+            if ($detailTable !== null && $ingredientTable !== null) {
+                $details = DB::table($detailTable . ' as ct')
+                    ->join($ingredientTable . ' as nl', 'ct.MaNguyenLieu', '=', 'nl.MaNguyenLieu')
+                    ->where('ct.MaPhieuKiemKe', $maPhieu)
+                    ->select('ct.*', 'nl.TenNguyenLieu')
+                    ->get()
+                    ->toArray();
+            }
+            
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $phieu->MaTaiKhoan,
+                'type' => 'kiemke_rejected',
+                'title' => 'Phiếu kiểm kê cuối ngày đã bị từ chối',
+                'message' => "Phiếu kiểm kê cuối ngày {$maPhieu} đã bị từ chối. Lý do: {$ghiChu}",
+                'MaPhieuKiemKe' => $maPhieu,
+                'data' => json_encode(['ghi_chu' => $ghiChu, 'details' => $details]),
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return back()->with('success', 'Đã từ chối báo cáo kiểm kê cuối ngày và yêu cầu nhân viên hiệu chỉnh lại số liệu.');
@@ -371,6 +438,7 @@ class KiemKeBepController extends Controller
             return back()->with('error', 'Không tìm thấy đủ dữ liệu để chốt ca.');
         }
 
+        $phieu = DB::table($reportTable)->where('MaPhieuKiemKe', $maPhieu)->first();
         $phieuHuy = $wasteHeaderTable !== null
             ? DB::table($wasteHeaderTable)->where('MaPhieuKiemKe', $maPhieu)->first()
             : null;
@@ -398,6 +466,21 @@ class KiemKeBepController extends Controller
                 }
             }
         });
+
+        // Send notification to the employee
+        if ($phieu && $phieu->MaTaiKhoan) {
+            DB::table('notifications')->insert([
+                'MaTaiKhoan' => $phieu->MaTaiKhoan,
+                'type' => 'kiemke_approved',
+                'title' => 'Phiếu kiểm kê cuối ngày đã được duyệt',
+                'message' => "Phiếu kiểm kê cuối ngày {$maPhieu} đã được duyệt thành công!",
+                'MaPhieuKiemKe' => $maPhieu,
+                'data' => null,
+                'is_read' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return back()->with('success', 'Đã xác nhận khớp và chốt ca thành công. Số lượng Bếp hoàn kho đã được cộng trả lại vào Tồn Kho Tổng.');
     }

@@ -22,12 +22,11 @@ class DashboardController extends Controller
             $countPhieuXuatHuy = $this->countAll(['phieuxuathuy', 'PhieuXuatHuy', 'XuatHuy']);
 
             $countPhieuThongKeTonKho = $this->countWhere(
-                ['phieukiemke', 'PhieuKiemKe'],
-                [
-                    'LoaiKiemKe' => 'Định kỳ',
-                    'TrangThai' => 'Đã duyệt',
-                ]
-            );
+            ['phieukiemke', 'PhieuKiemKe'],
+            [
+                'TrangThai' => 'Đã duyệt',
+            ]
+        );
 
             $countPhieuGiaiTrinh = $this->countAll(['phieugiaitrinh', 'PhieuGiaiTrinh']);
 
@@ -41,14 +40,10 @@ class DashboardController extends Controller
 
         if (Schema::hasTable('PhieuKiemKe')) {
             $countChoDuyetKiemKe = DB::table('PhieuKiemKe')
-                ->where('LoaiKiemKe', 'Định kỳ')
                 ->where('TrangThai', 'Chờ duyệt')
                 ->count();
 
-            $countThongKe = DB::table('PhieuKiemKe')
-                ->where('LoaiKiemKe', 'Định kỳ')
-                ->where('TrangThai', 'Đã duyệt')
-                ->count();
+            $countThongKe = DB::table('PhieuKiemKe')->count();
         }
 
         // Đếm số đơn hàng
