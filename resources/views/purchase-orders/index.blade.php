@@ -171,23 +171,12 @@
                                                 @csrf
                                                 <button class="btn btn-sm btn-outline-danger" type="submit">Hủy</button>
                                             </form>
-                                        </div>
-                                    @elseif (in_array($order->TrangThai, ['Chờ nhận hàng', 'Từ chối', 'Đang đổi trả', 'Đã nhập kho']))
-                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('don-hang.show', $order->MaDonDatHang) }}">Xem lịch sử/chi tiết</a>
-                                        </div>
-                                    @elseif ($order->TrangThai === 'Chờ xử lý')
-                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
                                             <a class="btn btn-sm btn-outline-primary" href="{{ route('don-hang.show', $order->MaDonDatHang) }}">Xem</a>
-                                            <a class="btn btn-sm btn-outline-danger" href="{{ route('don-hang.return.create', $order->MaDonDatHang) }}">Đổi trả</a>
-                                        </div>
-                                    @elseif ($order->TrangThai === 'Đã nhận hàng')
-                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                                            <a class="btn btn-sm btn-outline-primary" href="{{ route('don-hang.show', $order->MaDonDatHang) }}">Xem</a>
-                                            <a class="btn btn-sm btn-success" href="{{ route('don-hang.stock.create', $order->MaDonDatHang) }}">Nhập kho</a>
                                         </div>
                                     @else
-                                        <span class="text-muted small">Không có thao tác</span>
+                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                            <a class="btn btn-sm btn-outline-primary" href="{{ route('don-hang.show', $order->MaDonDatHang) }}">Xem</a>
+                                        </div>
                                     @endif
                                 @elseif ($isStoreChiefUser)
                                     <div class="d-inline-flex flex-wrap justify-content-end gap-2">
