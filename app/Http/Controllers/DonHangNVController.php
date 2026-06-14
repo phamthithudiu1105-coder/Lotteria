@@ -257,7 +257,7 @@ class DonHangNVController extends Controller
                     if ($hanSuDung->isBefore($ngayHienTai)) {
                         $trangThai = 'Hết hạn';
                         $hasExpiredItem = true;
-                    } elseif ($hanSuDung->diffInDays($ngayHienTai) <= 15) {
+                    } elseif ($ngayHienTai->diffInDays($hanSuDung, false) <= 15 && $ngayHienTai->diffInDays($hanSuDung, false) > 0) {
                         $trangThai = 'Sắp hết hạn';
                     }
 
