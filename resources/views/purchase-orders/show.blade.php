@@ -31,7 +31,7 @@
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
         <h2 class="text-lotteria fw-bold mb-1">
-            {{ $managerMode ? 'Kiểm tra kết quả đối soát đơn hàng ' : ($isStoreChiefUser ? 'Phê Duyệt Đơn Mua ' : 'Chi tiết đơn mua ') }}{{ $order->MaDonDatHang }}
+            {{ $managerMode ? 'Kiểm tra kết quả đối soát đơn đặt hàng ' : ($isStoreChiefUser ? 'Phê Duyệt Đơn Đặt Hàng ' : 'Chi tiết đơn đặt hàng ') }}{{ $order->MaDonDatHang }}
         </h2>
         <p class="text-muted mb-0">Lập ngày {{ \Illuminate\Support\Carbon::parse($order->NgayDat)->format('d/m/Y') }} bởi {{ $order->HoTen }}.</p>
     </div>
@@ -244,7 +244,7 @@
 
     <div class="card page-card mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
-            <h5 class="mb-1 fw-bold">Phê duyệt đơn mua</h5>
+            <h5 class="mb-1 fw-bold">Phê duyệt đơn đặt hàng</h5>
         </div>
         <div class="card-body px-4 pb-4">
             @if ($canApprove)
@@ -290,7 +290,7 @@
 @else
     <div class="card page-card mb-4">
         <div class="card-body px-4 py-4">
-            <div class="text-muted">Tài khoản hiện tại chỉ có quyền xem chi tiết đơn mua.</div>
+            <div class="text-muted">Tài khoản hiện tại chỉ có quyền xem chi tiết đơn đặt hàng.</div>
         </div>
     </div>
 @endif

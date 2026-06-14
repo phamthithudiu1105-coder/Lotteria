@@ -142,7 +142,7 @@
                                     0
                                 </span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 350px; max-width: 500px;">
+                            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 350px; max-width: 500px; max-height: 400px; overflow-y: auto;">
                                 <li class="dropdown-header d-flex justify-content-between align-items-center">
                                     <span class="fw-bold">Thông báo</span>
                                     @auth

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Trang Đơn Hàng')
+@section('title', 'Đơn Hàng')
 
 @php
     $isManagerUser = auth()->check() && in_array(auth()->user()->VaiTro ?? null, ['Quan ly', 'Quản lý'], true);
@@ -40,7 +40,7 @@
 @section('content')
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
-        <h2 class="text-lotteria fw-bold mb-1">{{ $managerMode ? 'Trang Đơn Hàng' : ($isStoreChiefUser ? 'Phê Duyệt Đơn Mua' : 'Đặt hàng & phê duyệt đơn mua') }}</h2>
+        <h2 class="text-lotteria fw-bold mb-1">{{ $managerMode ? 'Đơn Hàng' : ($isStoreChiefUser ? 'Phê Duyệt Đơn Đặt Hàng' : 'Đặt hàng & phê duyệt đơn đặt hàng') }}</h2>
     </div>
     @if ($isManagerUser && $managerMode)
         <a href="{{ route($routePrefix . '.create') }}" class="btn btn-lotteria fw-bold">+ Tạo đơn đặt hàng</a>
