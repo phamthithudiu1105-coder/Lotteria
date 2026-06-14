@@ -130,6 +130,10 @@ class NotificationController extends Controller
             return redirect()->route('don-hang.show', $data['MaDonDatHang']);
         }
 
+        if ($notification->type === 'low_stock') {
+            return redirect()->route('don-hang.create');
+        }
+
         return redirect()->back();
     }
 }
