@@ -60,10 +60,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($loHangTheoNL as $maNL => $loHangs)
+                @foreach($LoHangTheoNL as $maNL => $LoHangs)
                 @php
-                    $nl = $loHangs->first()->nguyenLieu;
-                    $slTong = $loHangs->sum('SoLuongNhap');
+                    $nl = $LoHangs->first()->NguyenLieu;
+                    $slTong = $LoHangs->sum('SoLuongNhap');
                 @endphp
                 <tr>
                     <td><strong>{{ $nl->TenNguyenLieu ?? $maNL }}</strong></td>
@@ -71,22 +71,22 @@
                     <td>{{ $nl->DonViTinh ?? '' }}</td>
                     <td style="text-align:center; font-weight:700; color:var(--lotteria-red)">{{ $slTong }}</td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <div>{{ \Carbon\Carbon::parse($lh->NgaySanXuat)->format('d/m/Y') }}</div>
                         @endforeach
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <div>{{ \Carbon\Carbon::parse($lh->HanSuDung)->format('d/m/Y') }}</div>
                         @endforeach
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <x-status-badge :status="$lh->TrangThai" />
                         @endforeach
                     </td>
                     <td style="font-size:12px; color:var(--text-muted)">
-                        @foreach($loHangs as $lh) <div>{{ $lh->MaLoHang }}</div> @endforeach
+                        @foreach($LoHangs as $lh) <div>{{ $lh->MaLoHang }}</div> @endforeach
                     </td>
                 </tr>
                 @endforeach
@@ -95,7 +95,7 @@
                 <tr style="background:#f9fafb; font-weight:700">
                     <td colspan="3" style="text-align:right; padding:12px 14px">Tổng số lượng đã nhập:</td>
                     <td style="text-align:center; font-size:18px; color:var(--lotteria-red)">
-                        {{ $phieuNhapKho->loHangs->sum('SoLuongNhap') }}
+                        {{ $phieuNhapKho->LoHangs->sum('SoLuongNhap') }}
                     </td>
                     <td colspan="4"></td>
                 </tr>

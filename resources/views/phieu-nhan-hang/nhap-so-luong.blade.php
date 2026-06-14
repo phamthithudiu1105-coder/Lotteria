@@ -54,12 +54,12 @@
                     @foreach($chiTietDon as $ct)
                     <tr id="row_{{ $ct->MaNguyenLieu }}">
                         <td>
-                            <strong>{{ $ct->nguyenLieu->TenNguyenLieu ?? $ct->MaNguyenLieu }}</strong>
+                            <strong>{{ $ct->NguyenLieu->TenNguyenLieu ?? $ct->MaNguyenLieu }}</strong>
                             <div style="font-size:11.5px; color:var(--text-muted)">
-                                {{ $ct->nguyenLieu->NhomHang ?? '' }}
+                                {{ $ct->NguyenLieu->NhomHang ?? '' }}
                             </div>
                         </td>
-                        <td style="text-align:center">{{ $ct->nguyenLieu->DonViTinh ?? '' }}</td>
+                        <td style="text-align:center">{{ $ct->NguyenLieu->DonViTinh ?? '' }}</td>
                         <td style="text-align:center">
                             <strong style="font-size:16px">{{ $ct->SoLuongDat }}</strong>
                             <input type="hidden"

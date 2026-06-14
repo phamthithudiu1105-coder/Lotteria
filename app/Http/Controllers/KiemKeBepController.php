@@ -14,7 +14,7 @@ class KiemKeBepController extends Controller
     {
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
-        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'NguyenLieu']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
         $wasteDetailTable = $this->resolveExistingTable(['ChiTietPhieuHuy', 'chitietphieuhuy']);
 
@@ -66,31 +66,31 @@ class KiemKeBepController extends Controller
             $maNguyenLieuTrongNgay = array_keys($inventorySnapshot['issued']);
         }
 
-        $nguyenLieusDb = $ingredientTable !== null && !empty($maNguyenLieuTrongNgay)
+        $NguyenLieusDb = $ingredientTable !== null && !empty($maNguyenLieuTrongNgay)
             ? DB::table($ingredientTable)->whereIn('MaNguyenLieu', $maNguyenLieuTrongNgay)->orderBy('TenNguyenLieu')->get()
             : collect();
 
-        $nguyenLieuForm = [];
-        foreach ($nguyenLieusDb as $nguyenLieu) {
-            $chiTiet = $detailMap->get($nguyenLieu->MaNguyenLieu);
+        $NguyenLieuForm = [];
+        foreach ($NguyenLieusDb as $NguyenLieu) {
+            $chiTiet = $detailMap->get($NguyenLieu->MaNguyenLieu);
 
-            $nguyenLieuForm[] = [
-                'ma_nl' => $nguyenLieu->MaNguyenLieu,
-                'ten_nl' => $nguyenLieu->TenNguyenLieu,
+            $NguyenLieuForm[] = [
+                'ma_nl' => $NguyenLieu->MaNguyenLieu,
+                'ten_nl' => $NguyenLieu->TenNguyenLieu,
                 'old_hoan_kho' => (int) ($chiTiet->SoLuongThucTe ?? 0),
-                'old_hang_huy' => (int) ($wasteQtyMap[$nguyenLieu->MaNguyenLieu] ?? 0),
-                'old_ly_do_huy' => $wasteReasonMap[$nguyenLieu->MaNguyenLieu] ?? '',
+                'old_hang_huy' => (int) ($wasteQtyMap[$NguyenLieu->MaNguyenLieu] ?? 0),
+                'old_ly_do_huy' => $wasteReasonMap[$NguyenLieu->MaNguyenLieu] ?? '',
             ];
         }
 
-        return view('kiemke.kiem_ke_bep', compact('nguyenLieuForm', 'rejectedReport'));
+        return view('kiemke.kiem_ke_bep', compact('NguyenLieuForm', 'rejectedReport'));
     }
 
     public function store(Request $request)
     {
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
-        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'NguyenLieu']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
         $wasteDetailTable = $this->resolveExistingTable(['ChiTietPhieuHuy', 'chitietphieuhuy']);
         $accountTable = $this->resolveExistingTable(['TaiKhoan', 'taikhoan']);
@@ -257,7 +257,7 @@ class KiemKeBepController extends Controller
     {
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
-        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'NguyenLieu']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
         $wasteDetailTable = $this->resolveExistingTable(['ChiTietPhieuHuy', 'chitietphieuhuy']);
         $accountTable = $this->resolveExistingTable(['TaiKhoan', 'taikhoan']);
@@ -366,7 +366,7 @@ class KiemKeBepController extends Controller
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
         $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
-        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'NguyenLieu']);
 
         if ($reportTable === null) {
             return back()->with('error', 'Không tìm thấy dữ liệu báo cáo kiểm kê để xử lý.');
@@ -427,15 +427,32 @@ class KiemKeBepController extends Controller
         return back()->with('success', 'Đã từ chối báo cáo kiểm kê cuối ngày và yêu cầu nhân viên hiệu chỉnh lại số liệu.');
     }
 
-    public function chotCaBaoCao(string $maPhieu)
+    public function chotCaBaoCao(Request $request, string $maPhieu)
     {
         $reportTable = $this->resolveExistingTable(['PhieuKiemKe', 'phieukiemke']);
         $detailTable = $this->resolveExistingTable(['ChiTietPhieuKiemKeCuoiNgay', 'chitietphieukiemkecuoingay']);
-        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'nguyenlieu']);
+        $ingredientTable = $this->resolveExistingTable(['NguyenLieu', 'NguyenLieu']);
         $wasteHeaderTable = $this->resolveExistingTable(['PhieuXuatHuy', 'phieuxuathuy']);
 
         if ($reportTable === null || $detailTable === null || $ingredientTable === null) {
             return back()->with('error', 'Không tìm thấy đủ dữ liệu để chốt ca.');
+        }
+
+        $request->validate([
+            'ket_luan' => ['required', 'array'],
+            'ket_luan.*' => ['required', 'string', 'in:Khớp,Lệch'],
+        ]);
+
+        // Check if all ingredients in the report have a ket_luan
+        $details = DB::table($detailTable)->where('MaPhieuKiemKe', $maPhieu)->get();
+        $ketLuan = $request->input('ket_luan', []);
+        foreach ($details as $detail) {
+            if (!isset($ketLuan[$detail->MaNguyenLieu])) {
+                return back()->with('error', 'Vui lòng chọn kết luận cho tất cả nguyên liệu trước khi duyệt!');
+            }
+            if ($ketLuan[$detail->MaNguyenLieu] !== 'Khớp') {
+                return back()->with('error', 'Chỉ có thể duyệt khi tất cả nguyên liệu được chọn "Khớp"!');
+            }
         }
 
         $phieu = DB::table($reportTable)->where('MaPhieuKiemKe', $maPhieu)->first();
@@ -444,12 +461,21 @@ class KiemKeBepController extends Controller
             : null;
 
         $details = DB::table($detailTable)->where('MaPhieuKiemKe', $maPhieu)->get();
+        $ketLuan = $request->input('ket_luan', []);
 
-        DB::transaction(function () use ($maPhieu, $details, $reportTable, $ingredientTable, $wasteHeaderTable, $phieuHuy) {
+        DB::transaction(function () use ($maPhieu, $details, $reportTable, $ingredientTable, $wasteHeaderTable, $phieuHuy, $detailTable, $ketLuan) {
             // Cập nhật phiếu sang Đã duyệt
             DB::table($reportTable)
                 ->where('MaPhieuKiemKe', $maPhieu)
                 ->update(['TrangThai' => $this->statusApproved()]);
+
+            // Update TinhTrang for each ingredient based on manager's decision
+            foreach ($ketLuan as $maNguyenLieu => $tinhTrang) {
+                DB::table($detailTable)
+                    ->where('MaPhieuKiemKe', $maPhieu)
+                    ->where('MaNguyenLieu', $maNguyenLieu)
+                    ->update(['TinhTrang' => $tinhTrang]);
+            }
 
             if ($wasteHeaderTable !== null && $phieuHuy) {
                 DB::table($wasteHeaderTable)
@@ -466,8 +492,8 @@ class KiemKeBepController extends Controller
                         ->where('MaLoHang', 'like', 'LH%')
                         ->orderByDesc('MaLoHang')
                         ->first();
-                    $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
-                    $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
+                    $LoHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
+                    $maLoHang = 'LH' . str_pad($LoHangNumber, 3, '0', STR_PAD_LEFT);
 
                     // Lấy ngày hiện tại cho lô hàng
                     $ngayHienTai = now()->startOfDay();
@@ -530,7 +556,7 @@ class KiemKeBepController extends Controller
     {
         $exportHeaderTable = $this->resolveExistingTable(['PhieuXuatKho', 'phieuxuatkho']);
         $exportDetailTable = $this->resolveExistingTable(['ChiTietPhieuXuat', 'chitietphieuxuat']);
-        $batchTable = $this->resolveExistingTable(['LoHang', 'lohang']);
+        $batchTable = $this->resolveExistingTable(['LoHang', 'LoHang']);
 
         $issued = [];
         if ($exportHeaderTable !== null && $exportDetailTable !== null && $batchTable !== null) {

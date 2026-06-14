@@ -224,7 +224,7 @@
                             showCancelButton: true,
                             confirmButtonColor: '#dc3545',
                             cancelButtonColor: '#6c757d',
-                            confirmButtonText: '✓ Vâng, từ chối!',
+                            confirmButtonText: 'Từ chối!',
                             cancelButtonText: 'Hủy bỏ'
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -240,6 +240,26 @@
                 if (btnChotCa) {
                     btnChotCa.addEventListener('click', function(e) {
                         e.preventDefault();
+
+                        // Kiểm tra xem đã chọn đủ radio button chưa
+                        let allSelected = true;
+                        phieu.Details.forEach(detail => {
+                            const radioGroup = document.querySelectorAll('input[name="ket_luan[' + detail.MaNguyenLieu + ']"]:checked');
+                            if (radioGroup.length === 0) {
+                                allSelected = false;
+                            }
+                        });
+
+                        if (!allSelected) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Chưa chọn kết luận!',
+                                text: 'Vui lòng chọn kết luận (Khớp / Không Khớp) cho tất cả nguyên liệu trước khi duyệt!',
+                                confirmButtonColor: '#dc3545',
+                                confirmButtonText: 'Đã hiểu'
+                            });
+                            return;
+                        }
 
                         const lechRadios = form.querySelectorAll('input[type="radio"][value="Lệch"]:checked');
                         
@@ -261,11 +281,10 @@
                                 showCancelButton: true,
                                 confirmButtonColor: '#198754', // Màu xanh success Bootstrap
                                 cancelButtonColor: '#6c757d', // Màu xám secondary Bootstrap
-                                confirmButtonText: '✓ Vâng, duyệt và chốt ca!',
+                                confirmButtonText: 'Duyệt và chốt ca!',
                                 cancelButtonText: 'Hủy bỏ'
                             }).then((result) => {
                                 if (result.isConfirmed) {
-                                    // Nếu Quản lý bấm Vâng thì mới thực sự submit gửi về Controller
                                     form.submit(); 
                                 }
                             });

@@ -142,7 +142,7 @@
                                     0
                                 </span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end" style="max-width: 400px;">
+                            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 350px; max-width: 500px;">
                                 <li class="dropdown-header d-flex justify-content-between align-items-center">
                                     <span class="fw-bold">Thông báo</span>
                                     @auth
@@ -216,7 +216,7 @@
                         listContainer.innerHTML = '<li class="dropdown-item text-center text-muted">Không có thông báo nào</li>';
                     } else {
                         listContainer.innerHTML = notifications.map(notification => `
-                            <li class="dropdown-item ${notification.is_read ? '' : 'fw-bold'}" style="cursor: pointer;">
+                            <li class="dropdown-item ${notification.is_read ? '' : 'fw-bold'}" style="cursor: pointer; white-space: normal;">
                                 <a href="/notifications/${notification.id}" class="text-decoration-none text-dark">
                                     <div class="d-flex align-items-start">
                                         <div class="flex-grow-1">

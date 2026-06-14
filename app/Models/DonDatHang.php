@@ -29,7 +29,7 @@ class DonDatHang extends Model
         return $this->hasMany(PhieuNhanHang::class, 'MaDonDatHang', 'MaDonDatHang');
     }
 
-    public function nguyenLieus()
+    public function NguyenLieus()
     {
         return $this->belongsToMany(
             NguyenLieu::class,

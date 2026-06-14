@@ -49,21 +49,21 @@ class PhieuNhanHangController extends Controller
     public function show($id)
     {
         $phieuNhan = PhieuNhanHang::with([
-            'donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
             'taiKhoan',
             'phieuDoiTras',
         ])->findOrFail($id);
 
         // Lấy chi tiết đơn đặt hàng (số lượng đặt)
-        $chiTietDon = ChiTietDonDatHang::with('nguyenLieu')
+        $chiTietDon = ChiTietDonDatHang::with('NguyenLieu')
             ->where('MaDonDatHang', $phieuNhan->MaDonDatHang)
             ->get();
 
         // Nhóm lô hàng đã nhận theo nguyên liệu
-        $loHangTheoNL = $phieuNhan->loHangs->groupBy('MaNguyenLieu');
+        $LoHangTheoNL = $phieuNhan->LoHangs->groupBy('MaNguyenLieu');
 
-        return view('phieu-nhan-hang.show', compact('phieuNhan', 'chiTietDon', 'loHangTheoNL'));
+        return view('phieu-nhan-hang.show', compact('phieuNhan', 'chiTietDon', 'LoHangTheoNL'));
     }
 
     /**
@@ -72,8 +72,8 @@ class PhieuNhanHangController extends Controller
     public function nhapSoLuong($id)
     {
         $phieuNhan = PhieuNhanHang::with([
-            'donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
         ])->findOrFail($id);
 
         if (!in_array($phieuNhan->TrangThai, [
@@ -84,7 +84,7 @@ class PhieuNhanHangController extends Controller
                 ->with('error', 'Phiếu này không ở trạng thái có thể nhập số lượng.');
         }
 
-        $chiTietDon = ChiTietDonDatHang::with('nguyenLieu')
+        $chiTietDon = ChiTietDonDatHang::with('NguyenLieu')
             ->where('MaDonDatHang', $phieuNhan->MaDonDatHang)
             ->get();
 

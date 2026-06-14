@@ -108,23 +108,23 @@ class XuatKhoController extends Controller
                     ]);
                 }
 
-                foreach ($cacLoHang as $loHang) {
+                foreach ($cacLoHang as $LoHang) {
                     if ($soLuongCanPhanBo <= 0) break;
 
-                    if ($loHang->SoLuongConLai >= $soLuongCanPhanBo) {
+                    if ($LoHang->SoLuongConLai >= $soLuongCanPhanBo) {
                         ChiTietPhieuXuat::create([
                             'MaPhieuXuat' => $maPhieuXuat,
-                            'MaLoHang'    => $loHang->MaLoHang,
+                            'MaLoHang'    => $LoHang->MaLoHang,
                             'SoLuongXuat' => $soLuongCanPhanBo
                         ]);
                         $soLuongCanPhanBo = 0;
                     } else {
                         ChiTietPhieuXuat::create([
                             'MaPhieuXuat' => $maPhieuXuat,
-                            'MaLoHang'    => $loHang->MaLoHang,
-                            'SoLuongXuat' => $loHang->SoLuongConLai
+                            'MaLoHang'    => $LoHang->MaLoHang,
+                            'SoLuongXuat' => $LoHang->SoLuongConLai
                         ]);
-                        $soLuongCanPhanBo -= $loHang->SoLuongConLai;
+                        $soLuongCanPhanBo -= $LoHang->SoLuongConLai;
                     }
                 }
 
@@ -196,12 +196,12 @@ class XuatKhoController extends Controller
 
         // Kết hợp dữ liệu (Join) để lấy thông tin trực quan đưa lên form
         $chiTietPhieu = ChiTietPhieuXuat::where('MaPhieuXuat', $id)
-            ->join('lohang', 'chitietphieuxuat.MaLoHang', '=', 'lohang.MaLoHang')
-            ->join('nguyenlieu', 'lohang.MaNguyenLieu', '=', 'nguyenlieu.MaNguyenLieu')
+            ->join('LoHang', 'chitietphieuxuat.MaLoHang', '=', 'LoHang.MaLoHang')
+            ->join('NguyenLieu', 'LoHang.MaNguyenLieu', '=', 'NguyenLieu.MaNguyenLieu')
             ->select(
-                'nguyenlieu.MaNguyenLieu',
-                'nguyenlieu.TenNguyenLieu',
-                'nguyenlieu.DonViTinh',
+                'NguyenLieu.MaNguyenLieu',
+                'NguyenLieu.TenNguyenLieu',
+                'NguyenLieu.DonViTinh',
                 'chitietphieuxuat.MaLoHang',
                 'chitietphieuxuat.SoLuongXuat'
             )
@@ -250,25 +250,25 @@ class XuatKhoController extends Controller
                     ]);
                 }
 
-                $loHang = LoHang::where('MaLoHang', $maLoHang)->first();
-                if (!$loHang) continue;
+                $LoHang = LoHang::where('MaLoHang', $maLoHang)->first();
+                if (!$LoHang) continue;
 
                 // 2. Trừ kho lô hàng
-                if ($loHang->SoLuongConLai < $soLuongThucTe) {
+                if ($LoHang->SoLuongConLai < $soLuongThucTe) {
                     DB::rollBack();
                     return redirect()->back()->withErrors([
                         'error' => 'Số lượng tồn kho hiện tại của lô ' . $maLoHang . ' không đủ để trừ. Dữ liệu kho có thể đang bị sai lệch.'
                     ]);
                 }
 
-                $loHang->SoLuongConLai -= $soLuongThucTe;
-                if ($loHang->SoLuongConLai == 0) {
-                    $loHang->TrangThai = 'Hết hàng';
+                $LoHang->SoLuongConLai -= $soLuongThucTe;
+                if ($LoHang->SoLuongConLai == 0) {
+                    $LoHang->TrangThai = 'Hết hàng';
                 }
-                $loHang->save();
+                $LoHang->save();
 
                 // Thêm vào danh sách nguyên liệu cần cập nhật tổng tồn
-                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+                $maNguyenLieus[$LoHang->MaNguyenLieu] = true;
             }
 
             // 3. Cập nhật tổng tồn kho cho từng nguyên liệu
@@ -328,12 +328,12 @@ class XuatKhoController extends Controller
         $phieuXuat = PhieuXuatKho::where('MaPhieuXuat', $id)->firstOrFail();
 
         $chiTietPhieu = ChiTietPhieuXuat::where('MaPhieuXuat', $id)
-            ->join('lohang', 'chitietphieuxuat.MaLoHang', '=', 'lohang.MaLoHang')
-            ->join('nguyenlieu', 'lohang.MaNguyenLieu', '=', 'nguyenlieu.MaNguyenLieu')
+            ->join('LoHang', 'chitietphieuxuat.MaLoHang', '=', 'LoHang.MaLoHang')
+            ->join('NguyenLieu', 'LoHang.MaNguyenLieu', '=', 'NguyenLieu.MaNguyenLieu')
             ->select(
-                'nguyenlieu.MaNguyenLieu',
-                'nguyenlieu.TenNguyenLieu',
-                'nguyenlieu.DonViTinh',
+                'NguyenLieu.MaNguyenLieu',
+                'NguyenLieu.TenNguyenLieu',
+                'NguyenLieu.DonViTinh',
                 'chitietphieuxuat.MaLoHang',
                 'chitietphieuxuat.SoLuongXuat'
             )

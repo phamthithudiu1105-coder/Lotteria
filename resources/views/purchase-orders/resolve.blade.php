@@ -159,7 +159,7 @@
         // Add event listeners
         document.querySelectorAll('.xu-ly-thieu, .xu-ly-thua').forEach(select => {
             select.addEventListener('change', function() {
-                const maNguyenLieu = this.dataset.nguyenLieu;
+                const maNguyenLieu = this.dataset.NguyenLieu;
                 updateLoiSelect(maNguyenLieu);
             });
         });

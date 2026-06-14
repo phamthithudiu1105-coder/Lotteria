@@ -32,24 +32,24 @@
     @csrf
 
     @foreach($saiLechList as $idx => $sl)
-    @php $maNL = $sl['nguyenLieu']->MaNguyenLieu; @endphp
+    @php $maNL = $sl['NguyenLieu']->MaNguyenLieu; @endphp
     <div class="card">
         <div class="card-header">
-            <h3>🔸 {{ $sl['nguyenLieu']->TenNguyenLieu }}</h3>
+            <h3>🔸 {{ $sl['NguyenLieu']->TenNguyenLieu }}</h3>
             <span class="badge {{ $sl['chenhLech'] < 0 ? 'badge-danger' : 'badge-warning' }}">
                 {{ $sl['chenhLech'] < 0 ? 'Thiếu ' . abs($sl['chenhLech']) : 'Thừa ' . $sl['chenhLech'] }}
-                {{ $sl['nguyenLieu']->DonViTinh }}
+                {{ $sl['NguyenLieu']->DonViTinh }}
             </span>
         </div>
         <div class="card-body">
             {{-- Thông tin sai lệch --}}
             <div class="info-grid" style="margin-bottom:20px">
-                <div class="info-item"><label>Số lượng đặt</label><span>{{ $sl['soLuongDat'] }} {{ $sl['nguyenLieu']->DonViTinh }}</span></div>
-                <div class="info-item"><label>Số lượng nhận được</label><span>{{ $sl['soLuongNhan'] }} {{ $sl['nguyenLieu']->DonViTinh }}</span></div>
+                <div class="info-item"><label>Số lượng đặt</label><span>{{ $sl['soLuongDat'] }} {{ $sl['NguyenLieu']->DonViTinh }}</span></div>
+                <div class="info-item"><label>Số lượng nhận được</label><span>{{ $sl['soLuongNhan'] }} {{ $sl['NguyenLieu']->DonViTinh }}</span></div>
                 <div class="info-item">
                     <label>Chênh lệch</label>
                     <span class="{{ $sl['chenhLech'] < 0 ? 'text-danger' : 'text-warning' }}">
-                        {{ $sl['chenhLech'] > 0 ? '+' : '' }}{{ $sl['chenhLech'] }} {{ $sl['nguyenLieu']->DonViTinh }}
+                        {{ $sl['chenhLech'] > 0 ? '+' : '' }}{{ $sl['chenhLech'] }} {{ $sl['NguyenLieu']->DonViTinh }}
                     </span>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                            max="{{ abs($sl['chenhLech']) }}"
                            value="{{ old('nguyen_lieu.'.$maNL.'.so_luong', abs($sl['chenhLech'])) }}"
                            required>
-                    <div class="form-text">Tối đa: {{ abs($sl['chenhLech']) }} {{ $sl['nguyenLieu']->DonViTinh }}</div>
+                    <div class="form-text">Tối đa: {{ abs($sl['chenhLech']) }} {{ $sl['NguyenLieu']->DonViTinh }}</div>
                     @error('nguyen_lieu.'.$maNL.'.so_luong')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

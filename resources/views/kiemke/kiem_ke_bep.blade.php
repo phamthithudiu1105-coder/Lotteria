@@ -147,7 +147,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($nguyenLieuForm as $nl)
+                            @forelse($NguyenLieuForm as $nl)
                                 @php
                                     $selectedReason = old('kiem_ke.' . $nl['ma_nl'] . '.ly_do_huy', $nl['old_ly_do_huy']);
                                 @endphp

@@ -17,7 +17,7 @@ class NguyenLieuController extends Controller
         $danhSachNL = NguyenLieu::all();
 
         // Truyền dữ liệu đó sang file giao diện
-        return view('nguyenlieu.index', compact('danhSachNL'));
+        return view('NguyenLieu.index', compact('danhSachNL'));
     }
 
     public function uploadExcel(Request $request)
@@ -51,14 +51,14 @@ class NguyenLieuController extends Controller
                 $moTa = substr(trim($row[5] ?? null), 0, 255); // Giới hạn độ dài 255 ký tự
 
                 // Tìm kiếm nguyên liệu theo Mã
-                $nguyenLieu = NguyenLieu::where('MaNguyenLieu', $maNguyenLieu)->first();
+                $NguyenLieu = NguyenLieu::where('MaNguyenLieu', $maNguyenLieu)->first();
 
-                if ($nguyenLieu) {
+                if ($NguyenLieu) {
                     // Cập nhật nếu đã tồn tại - không thay đổi SoLuongTonKho
-                    $nguyenLieu->update([
-                        'TenNguyenLieu' => $tenNguyenLieu ?: $nguyenLieu->TenNguyenLieu,
-                        'NhomHang' => $nhomHang ?: $nguyenLieu->NhomHang,
-                        'DonViTinh' => $donViTinh ?: $nguyenLieu->DonViTinh,
+                    $NguyenLieu->update([
+                        'TenNguyenLieu' => $tenNguyenLieu ?: $NguyenLieu->TenNguyenLieu,
+                        'NhomHang' => $nhomHang ?: $NguyenLieu->NhomHang,
+                        'DonViTinh' => $donViTinh ?: $NguyenLieu->DonViTinh,
                         'MoTa' => $moTa,
                     ]);
                     $countUpdate++;
@@ -88,7 +88,7 @@ class NguyenLieuController extends Controller
      */
     public function create()
     {
-        return view('nguyenlieu.create');
+        return view('NguyenLieu.create');
     }
 
     /**
@@ -132,7 +132,7 @@ class NguyenLieuController extends Controller
     public function edit($id)
     {
         $nl = \App\Models\NguyenLieu::findOrFail($id);
-        return view('nguyenlieu.edit', compact('nl'));
+        return view('NguyenLieu.edit', compact('nl'));
     }
 
     // Hàm nhận dữ liệu từ form Sửa và cập nhật vào Database

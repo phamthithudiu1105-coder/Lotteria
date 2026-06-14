@@ -84,10 +84,10 @@
         </thead>
         <tbody>
             @php $stt = 1; $tongSL = 0; @endphp
-            @foreach($loHangTheoNL as $maNL => $loHangs)
+            @foreach($LoHangTheoNL as $maNL => $LoHangs)
             @php
-                $nl = $loHangs->first()->nguyenLieu;
-                $slTong = $loHangs->sum('SoLuongNhap');
+                $nl = $LoHangs->first()->NguyenLieu;
+                $slTong = $LoHangs->sum('SoLuongNhap');
                 $tongSL += $slTong;
             @endphp
             <tr>
@@ -97,17 +97,17 @@
                 <td class="center">{{ $nl->DonViTinh ?? '' }}</td>
                 <td class="center"><strong>{{ $slTong }}</strong></td>
                 <td class="center">
-                    @foreach($loHangs as $lh)
+                    @foreach($LoHangs as $lh)
                         {{ \Carbon\Carbon::parse($lh->NgaySanXuat)->format('d/m/Y') }}<br>
                     @endforeach
                 </td>
                 <td class="center">
-                    @foreach($loHangs as $lh)
+                    @foreach($LoHangs as $lh)
                         {{ \Carbon\Carbon::parse($lh->HanSuDung)->format('d/m/Y') }}<br>
                     @endforeach
                 </td>
                 <td class="center">
-                    @foreach($loHangs as $lh){{ $lh->TrangThai }}<br>@endforeach
+                    @foreach($LoHangs as $lh){{ $lh->TrangThai }}<br>@endforeach
                 </td>
             </tr>
             @endforeach

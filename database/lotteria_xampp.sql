@@ -108,13 +108,13 @@ CREATE TABLE LoHang (
     MaPhieuDoiTra VARCHAR(10) NULL,
     MaPhieuNhap VARCHAR(10) NULL,
     PRIMARY KEY (MaLoHang),
-    CONSTRAINT fk_lohang_nguyenlieu
+    CONSTRAINT fk_LoHang_NguyenLieu
         FOREIGN KEY (MaNguyenLieu) REFERENCES NguyenLieu(MaNguyenLieu),
-    CONSTRAINT fk_lohang_phieunhanhang
+    CONSTRAINT fk_LoHang_phieunhanhang
         FOREIGN KEY (MaPhieuNhan) REFERENCES PhieuNhanHang(MaPhieuNhan),
-    CONSTRAINT fk_lohang_phieudoitra
+    CONSTRAINT fk_LoHang_phieudoitra
         FOREIGN KEY (MaPhieuDoiTra) REFERENCES PhieuDoiTra(MaPhieuDoiTra),
-    CONSTRAINT fk_lohang_phieunhapkho
+    CONSTRAINT fk_LoHang_phieunhapkho
         FOREIGN KEY (MaPhieuNhap) REFERENCES PhieuNhapKho(MaPhieuNhap)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -175,7 +175,7 @@ CREATE TABLE ChiTietDonDatHang (
     PRIMARY KEY (MaDonDatHang, MaNguyenLieu),
     CONSTRAINT fk_ctdondathang_dondathang
         FOREIGN KEY (MaDonDatHang) REFERENCES DonDatHang(MaDonDatHang),
-    CONSTRAINT fk_ctdondathang_nguyenlieu
+    CONSTRAINT fk_ctdondathang_NguyenLieu
         FOREIGN KEY (MaNguyenLieu) REFERENCES NguyenLieu(MaNguyenLieu)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -186,7 +186,7 @@ CREATE TABLE ChiTietPhieuXuat (
     PRIMARY KEY (MaPhieuXuat, MaLoHang),
     CONSTRAINT fk_ctphieuxuat_phieuxuatkho
         FOREIGN KEY (MaPhieuXuat) REFERENCES PhieuXuatKho(MaPhieuXuat),
-    CONSTRAINT fk_ctphieuxuat_lohang
+    CONSTRAINT fk_ctphieuxuat_LoHang
         FOREIGN KEY (MaLoHang) REFERENCES LoHang(MaLoHang)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -197,7 +197,7 @@ CREATE TABLE ChiTietPhieuHuy (
     PRIMARY KEY (MaPhieuHuy, MaNguyenLieu),
     CONSTRAINT fk_ctphieuhuy_phieuxuathuy
         FOREIGN KEY (MaPhieuHuy) REFERENCES PhieuXuatHuy(MaPhieuHuy),
-    CONSTRAINT fk_ctphieuhuy_nguyenlieu
+    CONSTRAINT fk_ctphieuhuy_NguyenLieu
         FOREIGN KEY (MaNguyenLieu) REFERENCES NguyenLieu(MaNguyenLieu)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -211,7 +211,7 @@ CREATE TABLE ChiTietPhieuKiemKeDinhKy (
     PRIMARY KEY (MaPhieuKiemKe, MaLoHang),
     CONSTRAINT fk_ctkkdinhky_phieukiemke
         FOREIGN KEY (MaPhieuKiemKe) REFERENCES PhieuKiemKe(MaPhieuKiemKe),
-    CONSTRAINT fk_ctkkdinhky_lohang
+    CONSTRAINT fk_ctkkdinhky_LoHang
         FOREIGN KEY (MaLoHang) REFERENCES LoHang(MaLoHang)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -225,7 +225,7 @@ CREATE TABLE ChiTietPhieuKiemKeCuoiNgay (
     PRIMARY KEY (MaPhieuKiemKe, MaNguyenLieu),
     CONSTRAINT fk_ctkkcuoingay_phieukiemke
         FOREIGN KEY (MaPhieuKiemKe) REFERENCES PhieuKiemKe(MaPhieuKiemKe),
-    CONSTRAINT fk_ctkkcuoingay_nguyenlieu
+    CONSTRAINT fk_ctkkcuoingay_NguyenLieu
         FOREIGN KEY (MaNguyenLieu) REFERENCES NguyenLieu(MaNguyenLieu)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

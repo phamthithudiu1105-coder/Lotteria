@@ -71,14 +71,14 @@
             <tbody>
                 @foreach($chiTietDon as $ct)
                 @php
-                    $loHangs     = $loHangTheoNL->get($ct->MaNguyenLieu, collect());
-                    $slNhan      = $loHangs->sum('SoLuongNhap');
+                    $LoHangs     = $LoHangTheoNL->get($ct->MaNguyenLieu, collect());
+                    $slNhan      = $LoHangs->sum('SoLuongNhap');
                     $chenhLech   = $slNhan - $ct->SoLuongDat;
                     $coSaiLech   = $chenhLech !== 0;
                 @endphp
                 <tr class="{{ $coSaiLech ? 'row-mismatch' : '' }}">
-                    <td><strong>{{ $ct->nguyenLieu->TenNguyenLieu ?? $ct->MaNguyenLieu }}</strong></td>
-                    <td>{{ $ct->nguyenLieu->DonViTinh ?? '' }}</td>
+                    <td><strong>{{ $ct->NguyenLieu->TenNguyenLieu ?? $ct->MaNguyenLieu }}</strong></td>
+                    <td>{{ $ct->NguyenLieu->DonViTinh ?? '' }}</td>
                     <td style="text-align:center">{{ $ct->SoLuongDat }}</td>
                     <td style="text-align:center">
                         {{ $slNhan > 0 ? $slNhan : '–' }}
@@ -95,16 +95,16 @@
                         @endif
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <div style="font-size:12px; line-height:1.8">
                                 NSX: {{ \Carbon\Carbon::parse($lh->NgaySanXuat)->format('d/m/Y') }}
                                 – HSD: {{ \Carbon\Carbon::parse($lh->HanSuDung)->format('d/m/Y') }}
                             </div>
                         @endforeach
-                        @if($loHangs->isEmpty()) <span class="text-muted">–</span> @endif
+                        @if($LoHangs->isEmpty()) <span class="text-muted">–</span> @endif
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <x-status-badge :status="$lh->TrangThai" />
                         @endforeach
                     </td>

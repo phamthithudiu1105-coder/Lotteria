@@ -19,7 +19,7 @@ class ChiTietDonDatHang extends Model
         return $this->belongsTo(DonDatHang::class, 'MaDonDatHang', 'MaDonDatHang');
     }
 
-    public function nguyenLieu()
+    public function NguyenLieu()
     {
         return $this->belongsTo(NguyenLieu::class, 'MaNguyenLieu', 'MaNguyenLieu');
     }

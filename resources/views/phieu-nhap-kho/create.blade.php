@@ -27,7 +27,7 @@
             <div class="info-item"><label>Đơn đặt hàng</label><span>{{ $phieuNhan->MaDonDatHang }}</span></div>
             <div class="info-item"><label>Ngày nhận hàng</label><span>{{ \Carbon\Carbon::parse($phieuNhan->NgayNhan)->format('d/m/Y') }}</span></div>
             <div class="info-item"><label>Ngày nhập kho</label><span>{{ now()->format('d/m/Y') }}</span></div>
-            <div class="info-item"><label>Tổng mặt hàng</label><span>{{ $phieuNhan->loHangs->count() }} lô</span></div>
+            <div class="info-item"><label>Tổng mặt hàng</label><span>{{ $phieuNhan->LoHangs->count() }} lô</span></div>
         </div>
     </div>
 </div>
@@ -50,33 +50,33 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($loHangTheoNL as $maNL => $loHangs)
+                @foreach($LoHangTheoNL as $maNL => $LoHangs)
                 @php
-                    $nguyenLieu = $loHangs->first()->nguyenLieu;
-                    $slNhap     = $loHangs->sum('SoLuongNhap');
-                    $tonHienTai = $nguyenLieu->SoLuongTonKho ?? 0;
+                    $NguyenLieu = $LoHangs->first()->NguyenLieu;
+                    $slNhap     = $LoHangs->sum('SoLuongNhap');
+                    $tonHienTai = $NguyenLieu->SoLuongTonKho ?? 0;
                 @endphp
                 <tr>
                     <td>
-                        <strong>{{ $nguyenLieu->TenNguyenLieu ?? $maNL }}</strong>
-                        <div style="font-size:11.5px;color:var(--text-muted)">{{ $nguyenLieu->DonViTinh ?? '' }}</div>
+                        <strong>{{ $NguyenLieu->TenNguyenLieu ?? $maNL }}</strong>
+                        <div style="font-size:11.5px;color:var(--text-muted)">{{ $NguyenLieu->DonViTinh ?? '' }}</div>
                     </td>
-                    <td>{{ $nguyenLieu->NhomHang ?? '' }}</td>
+                    <td>{{ $NguyenLieu->NhomHang ?? '' }}</td>
                     <td style="text-align:center">
                         <strong style="font-size:16px; color:var(--lotteria-red)">{{ $slNhap }}</strong>
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <div style="font-size:12px">{{ \Carbon\Carbon::parse($lh->NgaySanXuat)->format('d/m/Y') }}</div>
                         @endforeach
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <div style="font-size:12px">{{ \Carbon\Carbon::parse($lh->HanSuDung)->format('d/m/Y') }}</div>
                         @endforeach
                     </td>
                     <td>
-                        @foreach($loHangs as $lh)
+                        @foreach($LoHangs as $lh)
                             <x-status-badge :status="$lh->TrangThai" />
                         @endforeach
                     </td>

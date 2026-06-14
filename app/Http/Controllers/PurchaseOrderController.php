@@ -605,8 +605,8 @@ class PurchaseOrderController extends Controller
                         ->where('MaLoHang', 'like', 'LH%')
                         ->orderByDesc('MaLoHang')
                         ->first();
-                    $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
-                    $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
+                    $LoHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
+                    $maLoHang = 'LH' . str_pad($LoHangNumber, 3, '0', STR_PAD_LEFT);
 
                     // Lấy ngày hiện tại cho lô hàng
                     $ngayHienTai = now()->startOfDay();

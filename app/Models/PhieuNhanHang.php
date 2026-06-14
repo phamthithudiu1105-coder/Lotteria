@@ -31,7 +31,7 @@ class PhieuNhanHang extends Model
         return $this->belongsTo(DonDatHang::class, 'MaDonDatHang', 'MaDonDatHang');
     }
 
-    public function loHangs()
+    public function LoHangs()
     {
         return $this->hasMany(LoHang::class, 'MaPhieuNhan', 'MaPhieuNhan');
     }

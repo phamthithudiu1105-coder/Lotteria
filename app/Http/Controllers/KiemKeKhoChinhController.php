@@ -15,7 +15,7 @@ class KiemKeKhoChinhController extends Controller
      */
     public function index()
     {
-        $loHangsDb = DB::table('LoHang')
+        $LoHangsDb = DB::table('LoHang')
             ->join('NguyenLieu', 'LoHang.MaNguyenLieu', '=', 'NguyenLieu.MaNguyenLieu')
             ->select('LoHang.*', 'NguyenLieu.TenNguyenLieu')
             ->where('LoHang.SoLuongConLai', '>', 0)
@@ -23,7 +23,7 @@ class KiemKeKhoChinhController extends Controller
             ->get();
 
         $phiuKiemKeDienTu = [];
-        foreach ($loHangsDb as $lo) {
+        foreach ($LoHangsDb as $lo) {
             $ngayHienTai = now();
             $ngayHsd = \Carbon\Carbon::parse($lo->HanSuDung);
             $soNgayConLai = $ngayHienTai->diffInDays($ngayHsd, false);
@@ -72,8 +72,8 @@ class KiemKeKhoChinhController extends Controller
         foreach ($requestKiemKe as $maLo => $data) {
             $thucTe = $data['thuc_te'] ?? 0;
             
-            $loHang = DB::table('LoHang')->where('MaLoHang', $maLo)->first();
-            $soSach = $loHang ? $loHang->SoLuongConLai : 0;
+            $LoHang = DB::table('LoHang')->where('MaLoHang', $maLo)->first();
+            $soSach = $LoHang ? $LoHang->SoLuongConLai : 0;
             $chenhLech = $thucTe - $soSach;
             $tinhTrang = $chenhLech == 0 ? 'Khớp' : ($chenhLech > 0 ? 'Thừa hàng' : 'Thất thoát');
 
@@ -178,8 +178,8 @@ class KiemKeKhoChinhController extends Controller
             return redirect()->back()->with('status', 'Lô hàng này đã được hiệu chỉnh một lần, không thể sửa lại.');
         }
 
-        $loHang = DB::table('LoHang')->where('MaLoHang', $maLo)->first();
-        $soSach = $loHang ? $loHang->SoLuongConLai : 0;
+        $LoHang = DB::table('LoHang')->where('MaLoHang', $maLo)->first();
+        $soSach = $LoHang ? $LoHang->SoLuongConLai : 0;
         
         $chenhLechMoi = $thucTeMoi - $soSach;
         $tinhTrangMoi = $chenhLechMoi == 0 ? 'Khớp' : ($chenhLechMoi > 0 ? 'Thừa hàng' : 'Thất thoát');
@@ -305,9 +305,9 @@ class KiemKeKhoChinhController extends Controller
             ]);
 
             // Lấy MaNguyenLieu của lô hàng để cập nhật tổng tồn
-            $loHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
-            if ($loHang) {
-                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+            $LoHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
+            if ($LoHang) {
+                $maNguyenLieus[$LoHang->MaNguyenLieu] = true;
             }
         }
 
@@ -362,9 +362,9 @@ class KiemKeKhoChinhController extends Controller
             ]);
 
             // Lấy MaNguyenLieu của lô hàng để cập nhật tổng tồn
-            $loHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
-            if ($loHang) {
-                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+            $LoHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
+            if ($LoHang) {
+                $maNguyenLieus[$LoHang->MaNguyenLieu] = true;
             }
         }
 
@@ -422,7 +422,7 @@ class KiemKeKhoChinhController extends Controller
 
     private function normalizedAuditDetails(string $maPhieu): array
     {
-        $lotTable = $this->resolveExistingTable(['LoHang', 'lohang', 'lo_hang']);
+        $lotTable = $this->resolveExistingTable(['LoHang', 'LoHang', 'lo_hang']);
         $details = DB::table('ChiTietPhieuKiemKeDinhKy')
             ->where('MaPhieuKiemKe', $maPhieu)
             ->get();

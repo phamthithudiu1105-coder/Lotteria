@@ -40,8 +40,8 @@ class PhieuDoiTraController extends Controller
     public function create($maPhieuNhan)
     {
         $phieuNhan = PhieuNhanHang::with([
-            'donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
         ])->findOrFail($maPhieuNhan);
 
         if ($phieuNhan->TrangThai !== PhieuNhanHang::TRANG_THAI_CHO_XU_LY) {
@@ -49,23 +49,23 @@ class PhieuDoiTraController extends Controller
                 ->with('error', 'Chỉ có thể tạo phiếu đổi/trả cho phiếu đang ở trạng thái "Chờ xử lý".');
         }
 
-        $chiTietDon = ChiTietDonDatHang::with('nguyenLieu')
+        $chiTietDon = ChiTietDonDatHang::with('NguyenLieu')
             ->where('MaDonDatHang', $phieuNhan->MaDonDatHang)
             ->get();
 
         // Tính sai lệch cho từng nguyên liệu
-        $loHangTheoNL = $phieuNhan->loHangs->groupBy('MaNguyenLieu');
+        $LoHangTheoNL = $phieuNhan->LoHangs->groupBy('MaNguyenLieu');
         $saiLechList  = [];
 
         foreach ($chiTietDon as $ct) {
             $soLuongDat  = $ct->SoLuongDat;
-            $loHangs     = $loHangTheoNL->get($ct->MaNguyenLieu, collect());
-            $soLuongNhan = $loHangs->sum('SoLuongNhap');
+            $LoHangs     = $LoHangTheoNL->get($ct->MaNguyenLieu, collect());
+            $soLuongNhan = $LoHangs->sum('SoLuongNhap');
             $chenhLech   = $soLuongNhan - $soLuongDat;
 
             if ($chenhLech !== 0) {
                 $saiLechList[] = [
-                    'nguyenLieu'  => $ct->nguyenLieu,
+                    'NguyenLieu'  => $ct->NguyenLieu,
                     'soLuongDat'  => $soLuongDat,
                     'soLuongNhan' => $soLuongNhan,
                     'chenhLech'   => $chenhLech,
@@ -134,7 +134,7 @@ class PhieuDoiTraController extends Controller
     {
         $phieuDoiTra = PhieuDoiTra::with([
             'phieuNhanHang.donDatHang',
-            'loHangs.nguyenLieu',
+            'LoHangs.NguyenLieu',
             'taiKhoan',
         ])->findOrFail($id);
 

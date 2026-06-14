@@ -193,10 +193,10 @@ INSERT INTO `dondathang` (`MaDonDatHang`, `NgayDat`, `TrangThai`, `GhiChu`, `MaT
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `lohang`
+-- Cấu trúc bảng cho bảng `LoHang`
 --
 
-CREATE TABLE `lohang` (
+CREATE TABLE `LoHang` (
   `MaLoHang` varchar(10) NOT NULL,
   `NgaySanXuat` date NOT NULL,
   `HanSuDung` date NOT NULL,
@@ -210,10 +210,10 @@ CREATE TABLE `lohang` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `lohang`
+-- Đang đổ dữ liệu cho bảng `LoHang`
 --
 
-INSERT INTO `lohang` (`MaLoHang`, `NgaySanXuat`, `HanSuDung`, `SoLuongNhap`, `SoLuongConLai`, `TrangThai`, `MaNguyenLieu`, `MaPhieuNhan`, `MaPhieuDoiTra`, `MaPhieuNhap`) VALUES
+INSERT INTO `LoHang` (`MaLoHang`, `NgaySanXuat`, `HanSuDung`, `SoLuongNhap`, `SoLuongConLai`, `TrangThai`, `MaNguyenLieu`, `MaPhieuNhan`, `MaPhieuDoiTra`, `MaPhieuNhap`) VALUES
 ('LH001', '2026-04-01', '2026-07-01', 20, 13, 'Còn hạn', 'NL001', 'PN001', NULL, 'PNK001'),
 ('LH002', '2026-03-15', '2026-06-15', 100, 94, 'Sắp hết hạn', 'NL003', 'PN001', NULL, 'PNK001'),
 ('LH003', '2026-04-10', '2026-06-10', 30, 28, 'Sắp hết hạn', 'NL004', 'PN001', NULL, 'PNK001'),
@@ -230,10 +230,10 @@ INSERT INTO `lohang` (`MaLoHang`, `NgaySanXuat`, `HanSuDung`, `SoLuongNhap`, `So
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `nguyenlieu`
+-- Cấu trúc bảng cho bảng `NguyenLieu`
 --
 
-CREATE TABLE `nguyenlieu` (
+CREATE TABLE `NguyenLieu` (
   `MaNguyenLieu` varchar(10) NOT NULL,
   `TenNguyenLieu` varchar(100) NOT NULL,
   `DonViTinh` varchar(20) NOT NULL,
@@ -243,10 +243,10 @@ CREATE TABLE `nguyenlieu` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `nguyenlieu`
+-- Đang đổ dữ liệu cho bảng `NguyenLieu`
 --
 
-INSERT INTO `nguyenlieu` (`MaNguyenLieu`, `TenNguyenLieu`, `DonViTinh`, `NhomHang`, `SoLuongTonKho`, `MoTa`) VALUES
+INSERT INTO `NguyenLieu` (`MaNguyenLieu`, `TenNguyenLieu`, `DonViTinh`, `NhomHang`, `SoLuongTonKho`, `MoTa`) VALUES
 ('NL001', 'Thịt bò patty', 'Kg', 'Hàng đông', 13, 'Thịt bò xay đông'),
 ('NL002', 'Thịt gà fillet', 'Kg', 'Hàng đông', 12, 'Ức gà phi lê đông lạnh'),
 ('NL003', 'Bánh mì hamburger', 'Cái', 'Hàng khô', 94, 'Bánh mì tròn'),
@@ -507,9 +507,9 @@ ALTER TABLE `dondathang`
   ADD KEY `MaTaiKhoan` (`MaTaiKhoan`);
 
 --
--- Chỉ mục cho bảng `lohang`
+-- Chỉ mục cho bảng `LoHang`
 --
-ALTER TABLE `lohang`
+ALTER TABLE `LoHang`
   ADD PRIMARY KEY (`MaLoHang`),
   ADD KEY `MaNguyenLieu` (`MaNguyenLieu`),
   ADD KEY `MaPhieuNhan` (`MaPhieuNhan`),
@@ -517,9 +517,9 @@ ALTER TABLE `lohang`
   ADD KEY `MaPhieuNhap` (`MaPhieuNhap`);
 
 --
--- Chỉ mục cho bảng `nguyenlieu`
+-- Chỉ mục cho bảng `NguyenLieu`
 --
-ALTER TABLE `nguyenlieu`
+ALTER TABLE `NguyenLieu`
   ADD PRIMARY KEY (`MaNguyenLieu`);
 
 --
@@ -592,35 +592,35 @@ ALTER TABLE `taikhoan`
 --
 ALTER TABLE `chitietdondathang`
   ADD CONSTRAINT `chitietdondathang_ibfk_1` FOREIGN KEY (`MaDonDatHang`) REFERENCES `dondathang` (`MaDonDatHang`),
-  ADD CONSTRAINT `chitietdondathang_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `nguyenlieu` (`MaNguyenLieu`);
+  ADD CONSTRAINT `chitietdondathang_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `NguyenLieu` (`MaNguyenLieu`);
 
 --
 -- Các ràng buộc cho bảng `chitietphieuhuy`
 --
 ALTER TABLE `chitietphieuhuy`
   ADD CONSTRAINT `chitietphieuhuy_ibfk_1` FOREIGN KEY (`MaPhieuHuy`) REFERENCES `phieuxuathuy` (`MaPhieuHuy`),
-  ADD CONSTRAINT `chitietphieuhuy_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `nguyenlieu` (`MaNguyenLieu`);
+  ADD CONSTRAINT `chitietphieuhuy_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `NguyenLieu` (`MaNguyenLieu`);
 
 --
 -- Các ràng buộc cho bảng `chitietphieukiemkecuoingay`
 --
 ALTER TABLE `chitietphieukiemkecuoingay`
   ADD CONSTRAINT `chitietphieukiemkecuoingay_ibfk_1` FOREIGN KEY (`MaPhieuKiemKe`) REFERENCES `phieukiemke` (`MaPhieuKiemKe`),
-  ADD CONSTRAINT `chitietphieukiemkecuoingay_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `nguyenlieu` (`MaNguyenLieu`);
+  ADD CONSTRAINT `chitietphieukiemkecuoingay_ibfk_2` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `NguyenLieu` (`MaNguyenLieu`);
 
 --
 -- Các ràng buộc cho bảng `chitietphieukiemkedinhky`
 --
 ALTER TABLE `chitietphieukiemkedinhky`
   ADD CONSTRAINT `chitietphieukiemkedinhky_ibfk_1` FOREIGN KEY (`MaPhieuKiemKe`) REFERENCES `phieukiemke` (`MaPhieuKiemKe`),
-  ADD CONSTRAINT `chitietphieukiemkedinhky_ibfk_2` FOREIGN KEY (`MaLoHang`) REFERENCES `lohang` (`MaLoHang`);
+  ADD CONSTRAINT `chitietphieukiemkedinhky_ibfk_2` FOREIGN KEY (`MaLoHang`) REFERENCES `LoHang` (`MaLoHang`);
 
 --
 -- Các ràng buộc cho bảng `chitietphieuxuat`
 --
 ALTER TABLE `chitietphieuxuat`
   ADD CONSTRAINT `chitietphieuxuat_ibfk_1` FOREIGN KEY (`MaPhieuXuat`) REFERENCES `phieuxuatkho` (`MaPhieuXuat`),
-  ADD CONSTRAINT `chitietphieuxuat_ibfk_2` FOREIGN KEY (`MaLoHang`) REFERENCES `lohang` (`MaLoHang`);
+  ADD CONSTRAINT `chitietphieuxuat_ibfk_2` FOREIGN KEY (`MaLoHang`) REFERENCES `LoHang` (`MaLoHang`);
 
 --
 -- Các ràng buộc cho bảng `dondathang`
@@ -629,13 +629,13 @@ ALTER TABLE `dondathang`
   ADD CONSTRAINT `dondathang_ibfk_1` FOREIGN KEY (`MaTaiKhoan`) REFERENCES `taikhoan` (`MaTaiKhoan`);
 
 --
--- Các ràng buộc cho bảng `lohang`
+-- Các ràng buộc cho bảng `LoHang`
 --
-ALTER TABLE `lohang`
-  ADD CONSTRAINT `lohang_ibfk_1` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `nguyenlieu` (`MaNguyenLieu`),
-  ADD CONSTRAINT `lohang_ibfk_2` FOREIGN KEY (`MaPhieuNhan`) REFERENCES `phieunhanhang` (`MaPhieuNhan`),
-  ADD CONSTRAINT `lohang_ibfk_3` FOREIGN KEY (`MaPhieuDoiTra`) REFERENCES `phieudoitra` (`MaPhieuDoiTra`),
-  ADD CONSTRAINT `lohang_ibfk_4` FOREIGN KEY (`MaPhieuNhap`) REFERENCES `phieunhapkho` (`MaPhieuNhap`);
+ALTER TABLE `LoHang`
+  ADD CONSTRAINT `LoHang_ibfk_1` FOREIGN KEY (`MaNguyenLieu`) REFERENCES `NguyenLieu` (`MaNguyenLieu`),
+  ADD CONSTRAINT `LoHang_ibfk_2` FOREIGN KEY (`MaPhieuNhan`) REFERENCES `phieunhanhang` (`MaPhieuNhan`),
+  ADD CONSTRAINT `LoHang_ibfk_3` FOREIGN KEY (`MaPhieuDoiTra`) REFERENCES `phieudoitra` (`MaPhieuDoiTra`),
+  ADD CONSTRAINT `LoHang_ibfk_4` FOREIGN KEY (`MaPhieuNhap`) REFERENCES `phieunhapkho` (`MaPhieuNhap`);
 
 --
 -- Các ràng buộc cho bảng `phieudoitra`

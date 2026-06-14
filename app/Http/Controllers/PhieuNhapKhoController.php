@@ -38,8 +38,8 @@ class PhieuNhapKhoController extends Controller
     public function create($maPhieuNhan)
     {
         $phieuNhan = PhieuNhanHang::with([
-            'donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
         ])->findOrFail($maPhieuNhan);
 
         if ($phieuNhan->TrangThai !== PhieuNhanHang::TRANG_THAI_DA_NHAN) {
@@ -54,9 +54,9 @@ class PhieuNhapKhoController extends Controller
                 ->with('warning', 'Phiếu nhận hàng này đã được tạo phiếu nhập kho.');
         }
 
-        $loHangTheoNL = $phieuNhan->loHangs->groupBy('MaNguyenLieu');
+        $LoHangTheoNL = $phieuNhan->LoHangs->groupBy('MaNguyenLieu');
 
-        return view('phieu-nhap-kho.create', compact('phieuNhan', 'loHangTheoNL'));
+        return view('phieu-nhap-kho.create', compact('phieuNhan', 'LoHangTheoNL'));
     }
 
     /**
@@ -64,7 +64,7 @@ class PhieuNhapKhoController extends Controller
      */
     public function store(Request $request, $maPhieuNhan)
     {
-        $phieuNhan = PhieuNhanHang::with('loHangs.nguyenLieu')->findOrFail($maPhieuNhan);
+        $phieuNhan = PhieuNhanHang::with('LoHangs.NguyenLieu')->findOrFail($maPhieuNhan);
 
         $request->validate([
             'ghi_chu' => 'nullable|string|max:255',
@@ -84,11 +84,11 @@ class PhieuNhapKhoController extends Controller
             ]);
 
             // Cập nhật lô hàng: gán MaPhieuNhap và cập nhật tồn kho nguyên liệu
-            foreach ($phieuNhan->loHangs as $loHang) {
-                $loHang->update(['MaPhieuNhap' => $maPhieuNhap]);
+            foreach ($phieuNhan->LoHangs as $LoHang) {
+                $LoHang->update(['MaPhieuNhap' => $maPhieuNhap]);
 
                 // Cập nhật tổng tồn kho bằng tổng các lô
-                $this->updateIngredientStock($loHang->MaNguyenLieu);
+                $this->updateIngredientStock($LoHang->MaNguyenLieu);
             }
 
             // Cập nhật trạng thái phiếu nhận và đơn đặt hàng
@@ -110,14 +110,14 @@ class PhieuNhapKhoController extends Controller
     public function show($id)
     {
         $phieuNhapKho = PhieuNhapKho::with([
-            'phieuNhanHang.donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'phieuNhanHang.donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
             'taiKhoan',
         ])->findOrFail($id);
 
-        $loHangTheoNL = $phieuNhapKho->loHangs->groupBy('MaNguyenLieu');
+        $LoHangTheoNL = $phieuNhapKho->LoHangs->groupBy('MaNguyenLieu');
 
-        return view('phieu-nhap-kho.show', compact('phieuNhapKho', 'loHangTheoNL'));
+        return view('phieu-nhap-kho.show', compact('phieuNhapKho', 'LoHangTheoNL'));
     }
 
     /**
@@ -126,13 +126,13 @@ class PhieuNhapKhoController extends Controller
     public function baoCao($id)
     {
         $phieuNhapKho = PhieuNhapKho::with([
-            'phieuNhanHang.donDatHang.chiTietDonDatHangs.nguyenLieu',
-            'loHangs.nguyenLieu',
+            'phieuNhanHang.donDatHang.chiTietDonDatHangs.NguyenLieu',
+            'LoHangs.NguyenLieu',
             'taiKhoan',
         ])->findOrFail($id);
 
-        $loHangTheoNL = $phieuNhapKho->loHangs->groupBy('MaNguyenLieu');
+        $LoHangTheoNL = $phieuNhapKho->LoHangs->groupBy('MaNguyenLieu');
 
-        return view('phieu-nhap-kho.bao-cao', compact('phieuNhapKho', 'loHangTheoNL'));
+        return view('phieu-nhap-kho.bao-cao', compact('phieuNhapKho', 'LoHangTheoNL'));
     }
 }

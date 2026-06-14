@@ -32,7 +32,7 @@
 </div>
 
 {{-- Lô hàng liên quan --}}
-@if($phieuDoiTra->loHangs->isNotEmpty())
+@if($phieuDoiTra->LoHangs->isNotEmpty())
 <div class="card">
     <div class="card-header"><h3>📦 Lô hàng liên quan</h3></div>
     <div class="table-wrap">
@@ -49,10 +49,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($phieuDoiTra->loHangs as $lh)
+                @foreach($phieuDoiTra->LoHangs as $lh)
                 <tr>
                     <td>{{ $lh->MaLoHang }}</td>
-                    <td>{{ $lh->nguyenLieu->TenNguyenLieu ?? $lh->MaNguyenLieu }}</td>
+                    <td>{{ $lh->NguyenLieu->TenNguyenLieu ?? $lh->MaNguyenLieu }}</td>
                     <td style="text-align:center">{{ $lh->SoLuongNhap }}</td>
                     <td style="text-align:center">{{ $lh->SoLuongConLai }}</td>
                     <td>{{ \Carbon\Carbon::parse($lh->NgaySanXuat)->format('d/m/Y') }}</td>

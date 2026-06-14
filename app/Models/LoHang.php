@@ -9,7 +9,7 @@ class LoHang extends Model
 {
     protected static ?string $resolvedTable = null;
 
-    protected $table = 'lohang';
+    protected $table = 'LoHang';
     protected $primaryKey = 'MaLoHang';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -21,7 +21,7 @@ class LoHang extends Model
         'MaPhieuNhan', 'MaPhieuDoiTra', 'MaPhieuNhap'
     ];
 
-    public function nguyenLieu()
+    public function NguyenLieu()
     {
         return $this->belongsTo(NguyenLieu::class, 'MaNguyenLieu', 'MaNguyenLieu');
     }
@@ -47,7 +47,7 @@ class LoHang extends Model
             return static::$resolvedTable;
         }
 
-        foreach (['lohang', 'tblLoHang', 'lo_hang', 'LoHang'] as $candidate) {
+        foreach (['LoHang', 'tblLoHang', 'lo_hang', 'LoHang'] as $candidate) {
             if (Schema::hasTable($candidate)) {
                 return static::$resolvedTable = $candidate;
             }

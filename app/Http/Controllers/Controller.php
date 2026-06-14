@@ -14,11 +14,11 @@ abstract class Controller
      */
     protected function updateIngredientStock($maNguyenLieu)
     {
-        $tongTonKho = DB::table('lohang')
+        $tongTonKho = DB::table('LoHang')
             ->where('MaNguyenLieu', $maNguyenLieu)
             ->sum('SoLuongConLai');
 
-        DB::table('nguyenlieu')
+        DB::table('NguyenLieu')
             ->where('MaNguyenLieu', $maNguyenLieu)
             ->update(['SoLuongTonKho' => $tongTonKho]);
     }

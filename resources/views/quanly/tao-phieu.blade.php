@@ -22,8 +22,8 @@
 </style>
 
 @php
-    $nguyenLieuHienThi = $danhSachNguyenLieu->where('SoLuongTonKho', '>=', 20)->values();
-    $nguyenLieuTimKiem = $danhSachNguyenLieu->values();
+    $NguyenLieuHienThi = $danhSachNguyenLieu->where('SoLuongTonKho', '>=', 20)->values();
+    $NguyenLieuTimKiem = $danhSachNguyenLieu->values();
 @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -42,7 +42,7 @@
             <div id="searchDropdown" class="list-group search-dropdown w-100"></div>
         </div>
         <div class="search-help mt-2">
-            Hiện có {{ $nguyenLieuTimKiem->count() }} nguyên liệu có thể tìm kiếm và thêm vào.
+            Hiện có {{ $NguyenLieuTimKiem->count() }} nguyên liệu có thể tìm kiếm và thêm vào.
         </div>
     </div>
 </div>
@@ -52,7 +52,7 @@
     <div class="card page-card">
         <div class="card-header bg-lotteria d-flex justify-content-between align-items-center">
             <h6 class="mb-0">Danh Sách Nguyên Liệu Chờ Xuất</h6>
-            <span class="badge bg-warning text-dark" id="countBadge">{{ $nguyenLieuHienThi->count() }} nguyên liệu</span>
+            <span class="badge bg-warning text-dark" id="countBadge">{{ $NguyenLieuHienThi->count() }} nguyên liệu</span>
         </div>
 
         <div class="table-responsive">
@@ -68,7 +68,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    @foreach($nguyenLieuHienThi as $nl)
+                    @foreach($NguyenLieuHienThi as $nl)
                     <tr id="row-{{ $nl->MaNguyenLieu }}">
                         <td>{{ $nl->MaNguyenLieu }}</td>
                         <td class="fw-bold text-danger">{{ $nl->TenNguyenLieu }}</td>
@@ -98,7 +98,7 @@
 </form>
 
 <script>
-    const nguyenLieusTimKiem = @json($nguyenLieuTimKiem);
+    const NguyenLieusTimKiem = @json($NguyenLieuTimKiem);
 </script>
 
 <script>
@@ -108,8 +108,8 @@
         const tableBody = document.getElementById('tableBody');
         const countBadge = document.getElementById('countBadge');
 
-        let selectedItems = new Set(@json($nguyenLieuHienThi->pluck('MaNguyenLieu')));
-        let totalItems = {{ $nguyenLieuHienThi->count() }};
+        let selectedItems = new Set(@json($NguyenLieuHienThi->pluck('MaNguyenLieu')));
+        let totalItems = {{ $NguyenLieuHienThi->count() }};
 
         // Hàm triệt tiêu dấu tiếng Việt và đưa về chữ thường
         function xoaDauTiengViet(str) {
@@ -130,7 +130,7 @@
                 return;
             }
 
-            const filtered = nguyenLieusTimKiem.filter(nl => {
+            const filtered = NguyenLieusTimKiem.filter(nl => {
                 if (selectedItems.has(nl.MaNguyenLieu)) {
                     return false;
                 }

@@ -3,7 +3,7 @@
 @section('content')
 <div class="card shadow-sm border-0">
     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">DANH MỤC NGUYÊN LIÊU</h5>
+        <h5 class="mb-0">DANH MỤC NGUYÊN LIỆU</h5>
         <form id="upload-form" action="/nguyen-lieu/upload-excel" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="file" id="file-upload" name="file" accept=".xlsx,.xls" style="display: none;" onchange="document.getElementById('upload-form').submit()">
