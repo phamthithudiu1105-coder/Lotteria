@@ -25,6 +25,7 @@ class DashboardController extends Controller
             ['phieukiemke', 'PhieuKiemKe'],
             [
                 'TrangThai' => 'Đã duyệt',
+                'LoaiKiemKe' => 'Định kỳ',
             ]
         );
 
