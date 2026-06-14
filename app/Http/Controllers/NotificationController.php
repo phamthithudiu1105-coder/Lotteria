@@ -122,6 +122,10 @@ class NotificationController extends Controller
             return redirect()->route('cht.khochinh.thongke');
         }
 
+        if ($notification->type === 'giai_trinh_pending') {
+            return redirect()->route('cht.khochinh.thongke');
+        }
+
         if (in_array($notification->type, ['donhang_approved', 'donhang_rejected', 'donhang_waiting', 'donhang_completed'])) {
             return redirect()->route('don-hang.show', $data['MaDonDatHang']);
         }

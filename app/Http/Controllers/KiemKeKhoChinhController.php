@@ -278,16 +278,18 @@ class KiemKeKhoChinhController extends Controller
             'bang_chung' => 'required|string'
         ], [
             'noi_dung.required' => 'Vui lòng điền nội dung giải trình thất thoát!',
-            'noi_dung.min' => 'Nội dung giải trình phải nhập tối thiểu 5 ký tự trở lên!', // 🔥 ĐÃ THÊM MỚI
+            'noi_dung.min' => 'Nội dung giải trình phải nhập tối thiểu 5 ký tự trở lên!',
             
             'nguyen_nhan.required' => 'Vui lòng nêu rõ nguyên nhân xảy ra chênh lệch!',
-            'nguyen_nhan.min' => 'Nguyên nhân thất thoát phải nhập tối thiểu 5 ký tự trở lên!', // 🔥 ĐÃ THÊM MỚI
+            'nguyen_nhan.min' => 'Nguyên nhân thất thoát phải nhập tối thiểu 5 ký tự trở lên!',
             
             'bang_chung.required' => 'Bắt buộc cung cấp bằng chứng liên quan phục vụ kiểm toán!'
         ]);
 
+        $maPhieuGiaiTrinh = 'PGT' . rand(1000, 9999);
+
         DB::table('PhieuGiaiTrinh')->insert([
-            'MaPhieuGiaiTrinh' => 'PGT' . rand(1000, 9999),
+            'MaPhieuGiaiTrinh' => $maPhieuGiaiTrinh,
             'MaPhieuKiemKe' => $maPhieu,
             'NoiDung' => $request->noi_dung . ' [Bằng chứng: ' . $request->bang_chung . ']',
             'NguyenNhan' => $request->nguyen_nhan,
@@ -300,6 +302,34 @@ class KiemKeKhoChinhController extends Controller
             DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->update([
                 'SoLuongConLai' => $d->SoLuongThucTe
             ]);
+        }
+
+        // Send notification to store chiefs
+        $accountTable = DB::table('information_schema.tables')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->where(function ($query) {
+                $query->where('table_name', 'TaiKhoan')->orWhere('table_name', 'taikhoan');
+            })
+            ->value('table_name');
+
+        if ($accountTable) {
+            $storeChiefs = DB::table($accountTable)
+                ->whereIn('VaiTro', ['Cửa hàng trưởng', 'Cua hang truong'])
+                ->get();
+
+            foreach ($storeChiefs as $chief) {
+                DB::table('notifications')->insert([
+                    'MaTaiKhoan' => $chief->MaTaiKhoan,
+                    'type' => 'giai_trinh_pending',
+                    'title' => 'Có phiếu giải trình thất thoát cần xem',
+                    'message' => "Quản lý " . (Auth::user()->HoTen ?? 'N/A') . " đã gửi phiếu giải trình: " . $maPhieuGiaiTrinh,
+                    'MaPhieuKiemKe' => $maPhieu,
+                    'data' => json_encode(['MaPhieuGiaiTrinh' => $maPhieuGiaiTrinh]),
+                    'is_read' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         return redirect()->route('quanly.khochinh.duyet')->with('status', 'Tạo phiếu giải trình thành công và đã quay lại danh sách duyệt kiểm kho chính.');

@@ -48,7 +48,7 @@
                 @if($thongKe['GiaiTrinh'])
                     <div class="p-3 bg-light border-top">
                         <div class="alert alert-info mb-0 py-2 small shadow-sm border-start border-4 border-info">
-                            📝 <strong>Văn bản giải trình đính kèm đợt lệch ({{ $thongKe['GiaiTrinh']->MaPhieuGiaiTrinh }}):</strong> 
+                            📝 <strong>Phiếu giải trình đính kèm đợt lệch ({{ $thongKe['GiaiTrinh']->MaPhieuGiaiTrinh }}):</strong> 
                             <span class="fw-bold text-dark">{{ $thongKe['GiaiTrinh']->NoiDung }}</span> | Nguyên nhân: <span class="text-danger fw-bold">{{ $thongKe['GiaiTrinh']->NguyenNhan }}</span>
                         </div>
                     </div>
