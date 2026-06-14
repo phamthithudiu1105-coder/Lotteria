@@ -600,9 +600,30 @@ class PurchaseOrderController extends Controller
 
                 // Xu ly thua: nhap toan bo thi them so luong thua vao ton kho
                 if (($item['LoaiXuLyThua'] ?? null) === 'nhap_toan_bo' && $thongTinNL->SoLuongThua > 0) {
-                    DB::table('NguyenLieu')
-                        ->where('MaNguyenLieu', $maNL)
-                        ->increment('SoLuongTonKho', $thongTinNL->SoLuongThua);
+                    // Tạo lô hàng cho số lượng thừa
+                    $lastLoHang = DB::table('LoHang')
+                        ->where('MaLoHang', 'like', 'LH%')
+                        ->orderByDesc('MaLoHang')
+                        ->first();
+                    $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
+                    $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
+
+                    // Lấy ngày hiện tại cho lô hàng
+                    $ngayHienTai = now()->startOfDay();
+
+                    DB::table('LoHang')->insert([
+                        'MaLoHang' => $maLoHang,
+                        'NgaySanXuat' => $ngayHienTai, // Sử dụng ngày hiện tại vì không có thông tin sản xuất cho thừa
+                        'HanSuDung' => $ngayHienTai->copy()->addYears(1), // Giả định hạn dùng 1 năm cho thừa
+                        'SoLuongNhap' => $thongTinNL->SoLuongThua,
+                        'SoLuongConLai' => $thongTinNL->SoLuongThua,
+                        'TrangThai' => 'Còn hạn',
+                        'MaNguyenLieu' => $maNL,
+                        'MaPhieuNhan' => $receipt->MaPhieuNhan,
+                    ]);
+
+                    // Cập nhật tổng tồn kho
+                    $this->updateIngredientStock($maNL);
 
                     // Cap nhat so luong nhap kho
                     DB::table('ChiTietPhieuNhanHang')

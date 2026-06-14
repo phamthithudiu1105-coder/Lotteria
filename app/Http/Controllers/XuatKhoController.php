@@ -223,6 +223,7 @@ class XuatKhoController extends Controller
         ]);
 
         $phieuXuat = null;
+        $maNguyenLieus = [];
         DB::beginTransaction();
         try {
             $phieuXuat = PhieuXuatKho::where('MaPhieuXuat', $id)->firstOrFail();
@@ -266,15 +267,13 @@ class XuatKhoController extends Controller
                 }
                 $loHang->save();
 
-                // 3. Trừ kho tổng nguyên liệu
-                $nguyenLieu = NguyenLieu::where('MaNguyenLieu', $loHang->MaNguyenLieu)->first();
-                if ($nguyenLieu) {
-                    $nguyenLieu->SoLuongTonKho -= $soLuongThucTe;
-                    if ($nguyenLieu->SoLuongTonKho < 0) {
-                        $nguyenLieu->SoLuongTonKho = 0;
-                    }
-                    $nguyenLieu->save();
-                }
+                // Thêm vào danh sách nguyên liệu cần cập nhật tổng tồn
+                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+            }
+
+            // 3. Cập nhật tổng tồn kho cho từng nguyên liệu
+            foreach (array_keys($maNguyenLieus) as $maNguyenLieu) {
+                $this->updateIngredientStock($maNguyenLieu);
             }
 
             // 4. Đổi trạng thái phiếu

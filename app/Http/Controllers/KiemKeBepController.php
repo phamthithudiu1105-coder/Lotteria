@@ -458,12 +458,38 @@ class KiemKeBepController extends Controller
             }
 
             // Cộng lại lượng Bếp hoàn kho vào Tồn tổng
+            $maNguyenLieus = [];
             foreach ($details as $detail) {
                 if ($detail->SoLuongThucTe > 0) {
-                    DB::table($ingredientTable)
-                        ->where('MaNguyenLieu', $detail->MaNguyenLieu)
-                        ->increment('SoLuongTonKho', (int) $detail->SoLuongThucTe);
+                    // Tạo lô hàng cho số lượng hoàn kho từ bếp
+                    $lastLoHang = DB::table('LoHang')
+                        ->where('MaLoHang', 'like', 'LH%')
+                        ->orderByDesc('MaLoHang')
+                        ->first();
+                    $loHangNumber = $lastLoHang ? ((int) substr($lastLoHang->MaLoHang, 2)) + 1 : 1;
+                    $maLoHang = 'LH' . str_pad($loHangNumber, 3, '0', STR_PAD_LEFT);
+
+                    // Lấy ngày hiện tại cho lô hàng
+                    $ngayHienTai = now()->startOfDay();
+
+                    DB::table('LoHang')->insert([
+                        'MaLoHang' => $maLoHang,
+                        'NgaySanXuat' => $ngayHienTai, // Sử dụng ngày hiện tại vì không có thông tin sản xuất cho hoàn kho
+                        'HanSuDung' => $ngayHienTai->copy()->addYears(1), // Giả định hạn dùng 1 năm cho hoàn kho
+                        'SoLuongNhap' => $detail->SoLuongThucTe,
+                        'SoLuongConLai' => $detail->SoLuongThucTe,
+                        'TrangThai' => 'Còn hạn',
+                        'MaNguyenLieu' => $detail->MaNguyenLieu,
+                        // Không có MaPhieuNhan vì không liên kết với phiếu nhận hàng
+                    ]);
+
+                    $maNguyenLieus[$detail->MaNguyenLieu] = true;
                 }
+            }
+
+            // Cập nhật tổng tồn kho cho từng nguyên liệu
+            foreach (array_keys($maNguyenLieus) as $maNguyenLieu) {
+                $this->updateIngredientStock($maNguyenLieu);
             }
         });
 

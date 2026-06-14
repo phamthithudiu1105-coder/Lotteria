@@ -87,9 +87,8 @@ class PhieuNhapKhoController extends Controller
             foreach ($phieuNhan->loHangs as $loHang) {
                 $loHang->update(['MaPhieuNhap' => $maPhieuNhap]);
 
-                // Cộng dồn vào SoLuongTonKho của nguyên liệu
-                NguyenLieu::where('MaNguyenLieu', $loHang->MaNguyenLieu)
-                    ->increment('SoLuongTonKho', $loHang->SoLuongNhap);
+                // Cập nhật tổng tồn kho bằng tổng các lô
+                $this->updateIngredientStock($loHang->MaNguyenLieu);
             }
 
             // Cập nhật trạng thái phiếu nhận và đơn đặt hàng

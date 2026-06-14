@@ -298,10 +298,22 @@ class KiemKeKhoChinhController extends Controller
         ]);
 
         $details = DB::table('ChiTietPhieuKiemKeDinhKy')->where('MaPhieuKiemKe', $maPhieu)->get();
+        $maNguyenLieus = [];
         foreach ($details as $d) {
             DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->update([
                 'SoLuongConLai' => $d->SoLuongThucTe
             ]);
+
+            // Lấy MaNguyenLieu của lô hàng để cập nhật tổng tồn
+            $loHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
+            if ($loHang) {
+                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+            }
+        }
+
+        // Cập nhật tổng tồn kho cho từng nguyên liệu
+        foreach (array_keys($maNguyenLieus) as $maNguyenLieu) {
+            $this->updateIngredientStock($maNguyenLieu);
         }
 
         // Send notification to store chiefs
@@ -343,10 +355,22 @@ class KiemKeKhoChinhController extends Controller
         DB::table('PhieuKiemKe')->where('MaPhieuKiemKe', $maPhieu)->update(['TrangThai' => 'Đã duyệt']);
         
         $details = DB::table('ChiTietPhieuKiemKeDinhKy')->where('MaPhieuKiemKe', $maPhieu)->get();
+        $maNguyenLieus = [];
         foreach ($details as $d) {
             DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->update([
                 'SoLuongConLai' => $d->SoLuongThucTe
             ]);
+
+            // Lấy MaNguyenLieu của lô hàng để cập nhật tổng tồn
+            $loHang = DB::table('LoHang')->where('MaLoHang', $d->MaLoHang)->first();
+            if ($loHang) {
+                $maNguyenLieus[$loHang->MaNguyenLieu] = true;
+            }
+        }
+
+        // Cập nhật tổng tồn kho cho từng nguyên liệu
+        foreach (array_keys($maNguyenLieus) as $maNguyenLieu) {
+            $this->updateIngredientStock($maNguyenLieu);
         }
 
         // Send notification to the employee

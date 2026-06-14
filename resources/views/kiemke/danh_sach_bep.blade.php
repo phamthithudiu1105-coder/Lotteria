@@ -31,7 +31,7 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
-        <h2 class="text-lotteria fw-bold mb-1">Duyệt báo cáo kiểm kê cuối ngày (Bếp)</h2>
+        <h2 class="text-lotteria fw-bold mb-1">Duyệt báo cáo kiểm kê cuối ngày</h2>
     </div>
 </div>
 

@@ -8,18 +8,18 @@
         if (is_array($item)) {
             return [
                 'MaNguyenLieu' => $item['MaNguyenLieu'] ?? '',
-                'SoLuongDat' => $item['SoLuongDat'] ?? 1,
+                'SoLuongDat' => $item['SoLuongDat'] ?? 20,
             ];
         }
 
         return [
             'MaNguyenLieu' => $item->MaNguyenLieu ?? '',
-            'SoLuongDat' => $item->SoLuongDat ?? 1,
+            'SoLuongDat' => $item->SoLuongDat ?? 20,
         ];
     })->all());
 
     if (empty($editableItems)) {
-        $editableItems = [['MaNguyenLieu' => '', 'SoLuongDat' => 1]];
+        $editableItems = [['MaNguyenLieu' => '', 'SoLuongDat' => 20]];
     }
 @endphp
 
@@ -92,7 +92,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Số lượng</label>
-                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 1 }}" required>
+                            <input type="number" min="1" max="500" name="items[{{ $index }}][SoLuongDat]" class="form-control" value="{{ $oldItem['SoLuongDat'] ?? 20 }}" required>
                         </div>
                         <div class="col-md-1 d-grid">
                             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -117,7 +117,7 @@
         </div>
         <div class="col-md-3">
             <label class="form-label fw-semibold">Số lượng</label>
-            <input data-name="SoLuongDat" type="number" min="1" max="500" value="1" class="form-control" required>
+            <input data-name="SoLuongDat" type="number" min="1" max="500" value="20" class="form-control" required>
         </div>
         <div class="col-md-1 d-grid">
             <button class="btn btn-outline-danger" type="button" onclick="removeItemRow(this)" title="Xóa dòng">X</button>
@@ -285,7 +285,7 @@
             if (rows.length === 1) {
                 rows[0].querySelector('select').value = '';
                 const quantityInput = rows[0].querySelector('input[type="number"]');
-                quantityInput.value = 1;
+                quantityInput.value = 20;
                 validateQuantity(quantityInput);
             } else {
                 button.closest('.item-row').remove();

@@ -178,6 +178,7 @@ class DonHangNVController extends Controller
 
             $hasDiscrepancy = false;
             $hasExpiredItem = false;
+            $maNguyenLieus = [];
 
             // Lấy thông tin cần nhận cho lần 2 nếu có
             $processingItems = collect();
@@ -271,11 +272,14 @@ class DonHangNVController extends Controller
                         'MaPhieuNhan' => $maPhieuNhan,
                     ]);
 
-                    // Cập nhật số lượng tồn kho
-                    DB::table('NguyenLieu')
-                        ->where('MaNguyenLieu', $item['MaNguyenLieu'])
-                        ->increment('SoLuongTonKho', $soLuongNhapKho);
+                    // Thêm vào danh sách nguyên liệu cần cập nhật tổng tồn
+                    $maNguyenLieus[$item['MaNguyenLieu']] = true;
                 }
+            }
+
+            // Cập nhật tổng tồn kho cho từng nguyên liệu
+            foreach (array_keys($maNguyenLieus) as $maNguyenLieu) {
+                $this->updateIngredientStock($maNguyenLieu);
             }
 
             // Xác định trạng thái mới của đơn hàng
