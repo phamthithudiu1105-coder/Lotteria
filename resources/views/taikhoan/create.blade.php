@@ -14,9 +14,6 @@
         </div>
     @endif
 
-@section('content')
-<div class="container w-50">
-    <h2 class="mb-4">Thêm tài khoản</h2>
     <form action="{{ route('tai-khoan.store') }}" method="POST">
         @csrf
         <div class="mb-3">
